@@ -65,4 +65,54 @@ export const authApi = {
   },
 };
 
+export interface ConsultationRequest {
+  age: number;
+  gender: string;
+  temperature: number;
+  heart_rate: number;
+  systolic_bp?: number;
+  diastolic_bp?: number;
+  symptoms: string[];
+  description?: string;
+}
+
+export interface ConsultationResponse {
+  resumen: string;
+  nivel_atencion: string;
+  recomendacion: string;
+  advertencia: string;
+}
+
+export interface ConsultationHistoryItem {
+  id: number;
+  age: number | null;
+  gender: string | null;
+  temperature: number | null;
+  heart_rate: number | null;
+  systolic_bp: number | null;
+  diastolic_bp: number | null;
+  symptoms: string;
+  description: string;
+  resumen: string;
+  nivel_atencion: string;
+  recomendacion: string;
+  advertencia: string;
+  created_at: string;
+}
+
+export const medicalApi = {
+  async createConsultation(data: ConsultationRequest): Promise<ConsultationResponse> {
+    const { data: result } = await api.post<ConsultationResponse>(
+      "/api/v1/medical/consultation",
+      data,
+    );
+    return result;
+  },
+
+  async getConsultations(): Promise<any[]> {
+    const { data } = await api.get<any[]>("/api/v1/medical/consultations");
+    return data;
+  },
+};
+
 export { api };

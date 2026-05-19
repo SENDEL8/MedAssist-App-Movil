@@ -25,6 +25,30 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="consultation"
+        options={{
+          title: "Consulta",
+          tabBarLabel: ({ focused }) => (
+            <Text style={{ color: focused ? "#16a34a" : "#6b7280" }}>Consulta</Text>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="history"
+        options={{
+          title: "Historial",
+          tabBarLabel: ({ focused }) => (
+            <Text style={{ color: focused ? "#16a34a" : "#6b7280" }}>Historial</Text>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="result"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
