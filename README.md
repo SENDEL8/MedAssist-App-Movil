@@ -1,56 +1,128 @@
-# Welcome to your Expo app 👋
+# MedAssist — App Movil
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+App movil de MedAssist, un asistente medico personal con autenticacion segura, consultas medicas con IA y recordatorios de medicamentos.
 
-## Get started
+## Stack
 
-1. Install dependencies
+| Componente | Tecnologia |
+|---|---|
+| Framework | Expo SDK 55 |
+| Lenguaje | TypeScript |
+| Navegacion | Expo Router |
+| Estado | Zustand |
+| Estilos | StyleSheet nativo |
+| HTTP | Axios |
+| Storage | expo-secure-store |
 
-   ```bash
-   npm install
-   ```
+## Requisitos
 
-2. Start the app
+- Node.js 18+
+- pnpm
+- Expo CLI (`npx expo`)
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Instalacion
 
 ```bash
-npm run reset-project
+cd mobile
+
+# Instalar dependencias
+pnpm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Configuracion
 
-### Other setup steps
+La URL de la API se configura automaticamente segun la plataforma en `src/constants/config.ts`:
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+- **Android emulador:** `http://10.0.2.2:8000`
+- **iOS simulator:** `http://localhost:8000`
+- **Web:** `http://localhost:8000`
 
-## Learn more
+Para produccion, usa la variable de entorno `EXPO_PUBLIC_API_URL`:
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+EXPO_PUBLIC_API_URL=https://tu-api.com pnpm start
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Ejecucion
 
-## Join the community
+```bash
+# Iniciar Expo
+pnpm start
 
-Join our community of developers creating universal apps.
+# Opciones:
+# - a: Abrir en Android
+# - i: Abrir en iOS
+# - w: Abrir en navegador web
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Estructura
+
+```
+mobile/
+├── src/
+│   ├── app/
+│   │   ├── _layout.tsx           # Root layout con Stack
+│   │   ├── index.tsx             # Entry point (redirect auth)
+│   │   ├── (auth)/               # Grupo de auth (sin tabs)
+│   │   │   ├── _layout.tsx
+│   │   │   ├── login.tsx         # Pantalla de login
+│   │   │   └── register.tsx      # Pantalla de registro
+│   │   └── (tabs)/               # Grupo de tabs (protegido)
+│   │       ├── _layout.tsx
+│   │       └── index.tsx         # Home screen
+│   ├── store/
+│   │   └── authStore.ts          # Zustand auth state
+│   ├── services/
+│   │   └── api.ts                # Axios client + interceptors
+│   ├── utils/
+│   │   └── storage.ts            # Storage wrapper (web + native)
+│   └── constants/
+│       └── config.ts             # API URL por plataforma
+└── package.json
+```
+
+## Autenticacion
+
+### Flujo
+
+1. **App inicia** → Verifica token guardado
+2. **Si hay token valido** → Redirige a `(tabs)/`
+3. **Si no hay token** → Redirige a `(auth)/login`
+4. **Login exitoso** → Guarda token + usuario, redirige a `(tabs)/`
+5. **Logout** → Limpia storage, redirige a login
+
+### Validaciones
+
+**Login:**
+- Email con formato valido
+- Contrasena requerida
+
+**Registro:**
+- Nombre: minimo 2 caracteres
+- Email: formato valido, unico
+- Contrasena: 8+ chars, mayuscula, minuscula, numero
+- Confirmar contrasena: debe coincidir
+
+### Seguridad
+
+- **Tokens:** Almacenados en `expo-secure-store` (nativo) o `localStorage` (web)
+- **Expiracion:** Se verifica `exp` claim antes de restaurar sesion
+- **401 handler:** Interceptor de Axios limpia token automaticamente
+- **HTTPS:** Requerido en produccion
+
+## Endpoints del Backend
+
+| Metodo | Path | Descripcion |
+|---|---|---|
+| `POST` | `/api/v1/auth/register` | Registro |
+| `POST` | `/api/v1/auth/login` | Login |
+| `GET` | `/api/v1/auth/me` | Perfil |
+
+## Proximos pasos
+
+- [ ] Pantalla de consulta medica con IA
+- [ ] Pantalla de recordatorios de medicamentos
+- [ ] Pantalla de historial de consultas
+- [ ] Notificaciones push para recordatorios
+- [ ] Modo oscuro
+- [ ] Iconos de tab bar
