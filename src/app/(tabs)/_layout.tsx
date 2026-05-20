@@ -20,6 +20,7 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: "Inicio",
+          tabBarStyle: { display: "none" },
           tabBarLabel: ({ focused }) => (
             <Text style={{ color: focused ? "#16a34a" : "#6b7280" }}>Inicio</Text>
           ),
@@ -50,6 +51,21 @@ export default function TabsLayout() {
           tabBarLabel: ({ focused }) => (
             <Text style={{ color: focused ? "#16a34a" : "#6b7280" }}>Alertas</Text>
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="lab-exam"
+        options={{
+          title: "Examenes",
+          tabBarLabel: ({ focused }) => (
+            <Text style={{ color: focused ? "#16a34a" : "#6b7280" }}>Examenes</Text>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="lab-result"
+        options={{
+          href: null,
         }}
       />
       <Tabs.Screen

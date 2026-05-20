@@ -100,6 +100,29 @@ export interface ConsultationHistoryItem {
   created_at: string;
 }
 
+export interface ExtractedValue {
+  name: string;
+  value: string;
+  unit: string;
+  reference_range: string;
+  is_out_of_range: boolean;
+}
+
+export interface LabExamResponse {
+  extracted_values: ExtractedValue[];
+  plain_language_summary: string;
+  medical_warning: string;
+}
+
+export interface LabExamHistoryItem {
+  id: number;
+  image_path: string;
+  extracted_values: ExtractedValue[];
+  plain_language_summary: string;
+  medical_warning: string;
+  created_at: string;
+}
+
 export const medicalApi = {
   async createConsultation(data: ConsultationRequest): Promise<ConsultationResponse> {
     const { data: result } = await api.post<ConsultationResponse>(
@@ -111,6 +134,24 @@ export const medicalApi = {
 
   async getConsultations(): Promise<any[]> {
     const { data } = await api.get<any[]>("/api/v1/medical/consultations");
+    return data;
+  },
+};
+
+export const labsApi = {
+  async analyzeLabExam(formData: FormData): Promise<LabExamResponse> {
+    const { data } = await api.post<LabExamResponse>(
+      "/api/v1/labs/analyze",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      },
+    );
+    return data;
+  },
+
+  async getLabExams(): Promise<LabExamHistoryItem[]> {
+    const { data } = await api.get<LabExamHistoryItem[]>("/api/v1/labs/history");
     return data;
   },
 };

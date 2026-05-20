@@ -48,8 +48,14 @@ export default function HomeScreen() {
             <Text style={styles.greeting}>{getGreeting()}</Text>
             <Text style={styles.name}>{user.full_name}</Text>
           </View>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{user.full_name.charAt(0).toUpperCase()}</Text>
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.logoutBtnHeader} onPress={handleLogout} activeOpacity={0.7}>
+              <Text style={styles.logoutIconHeader}>🚪</Text>
+              <Text style={styles.logoutTextHeader}>Salir</Text>
+            </TouchableOpacity>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{user.full_name.charAt(0).toUpperCase()}</Text>
+            </View>
           </View>
         </View>
         <View style={styles.headerCurve} />
@@ -89,6 +95,21 @@ export default function HomeScreen() {
 
         <TouchableOpacity
           style={styles.actionCard}
+          onPress={() => router.push("/(tabs)/lab-exam" as any)}
+          activeOpacity={0.85}
+        >
+          <View style={[styles.actionIconBg, { backgroundColor: "#f3e8ff" }]}>
+            <Text style={styles.actionIcon}>🔬</Text>
+          </View>
+          <View style={styles.actionInfo}>
+            <Text style={styles.actionTitle}>Analisis de Examenes</Text>
+            <Text style={styles.actionDesc}>Fotografia tu examen de laboratorio</Text>
+          </View>
+          <Text style={styles.actionArrow}>›</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionCard}
           onPress={() => router.push("/(tabs)/history" as any)}
           activeOpacity={0.85}
         >
@@ -116,16 +137,6 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.actionArrow}>›</Text>
         </TouchableOpacity>
-
-        {/* Logout */}
-        <TouchableOpacity
-          style={styles.logoutBtn}
-          onPress={handleLogout}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.logoutIcon}>🚪</Text>
-          <Text style={styles.logoutText}>Cerrar Sesion</Text>
-        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -138,6 +149,7 @@ const styles = StyleSheet.create({
   /* Header */
   headerBg: { backgroundColor: "#15803d", paddingTop: 50, paddingBottom: 32, paddingHorizontal: 24 },
   headerContent: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  headerActions: { flexDirection: "row", alignItems: "center", gap: 12 },
   greeting: { fontSize: 16, color: "#bbf7d0", marginBottom: 2 },
   name: { fontSize: 22, fontWeight: "bold", color: "#fff" },
   avatar: {
@@ -149,6 +161,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   avatarText: { fontSize: 20, fontWeight: "bold", color: "#fff" },
+  logoutBtnHeader: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
+  logoutIconHeader: { fontSize: 16, marginRight: 4 },
+  logoutTextHeader: { fontSize: 13, color: "#fff", fontWeight: "500" },
   headerCurve: {
     position: "absolute",
     bottom: -20,
@@ -211,15 +226,4 @@ const styles = StyleSheet.create({
   actionTitle: { fontSize: 17, fontWeight: "600", color: "#1f2937" },
   actionDesc: { fontSize: 14, color: "#6b7280", marginTop: 2 },
   actionArrow: { fontSize: 24, color: "#d1d5db", marginLeft: 8 },
-
-  /* Logout */
-  logoutBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 16,
-    paddingVertical: 14,
-  },
-  logoutIcon: { fontSize: 18, marginRight: 8 },
-  logoutText: { fontSize: 15, color: "#ef4444", fontWeight: "500" },
 });
