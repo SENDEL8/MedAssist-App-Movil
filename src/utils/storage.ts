@@ -6,14 +6,15 @@ const isWeb = Platform.OS === "web";
 export const storage = {
   async getItem(key: string): Promise<string | null> {
     if (isWeb) {
-      return typeof window !== "undefined" ? localStorage.getItem(key) : null;
+      if (typeof window === "undefined") return null;
+      return sessionStorage.getItem(key);
     }
     return SecureStore.getItemAsync(key);
   },
 
   async setItem(key: string, value: string): Promise<void> {
     if (isWeb) {
-      localStorage.setItem(key, value);
+      sessionStorage.setItem(key, value);
     } else {
       await SecureStore.setItemAsync(key, value);
     }
@@ -21,7 +22,7 @@ export const storage = {
 
   async deleteItem(key: string): Promise<void> {
     if (isWeb) {
-      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
     } else {
       await SecureStore.deleteItemAsync(key);
     }

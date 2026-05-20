@@ -5,6 +5,7 @@ import { storage } from "@/utils/storage";
 const api = axios.create({
   baseURL: API_URL,
   headers: { "Content-Type": "application/json" },
+  timeout: 60000, // 60 seconds for AI calls
 });
 
 api.interceptors.request.use(async (config) => {
@@ -19,8 +20,34 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      await storage.deleteItem("auth_token");
-      await storage.deleteItem("auth_user");
+      const originalRequest = error.config;
+
+      if (originalRequest?.url?.includes("/auth/refresh")) {
+        await storage.deleteItem("auth_token");
+        await storage.deleteItem("auth_refresh_token");
+        await storage.deleteItem("auth_user");
+        return Promise.reject(error);
+      }
+
+      if (!originalRequest._retried) {
+        originalRequest._retried = true;
+        try {
+          const refreshToken = await storage.getItem("auth_refresh_token");
+          if (refreshToken) {
+            const { data } = await api.post<RefreshResponse>("/api/v1/auth/refresh", {
+              refresh_token: refreshToken,
+            });
+            await storage.setItem("auth_token", data.access_token);
+            await storage.setItem("auth_refresh_token", data.refresh_token);
+            originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
+            return api(originalRequest);
+          }
+        } catch {
+          await storage.deleteItem("auth_token");
+          await storage.deleteItem("auth_refresh_token");
+          await storage.deleteItem("auth_user");
+        }
+      }
     }
     return Promise.reject(error);
   }
@@ -35,8 +62,14 @@ export interface User {
 
 interface AuthResponse {
   access_token: string;
+  refresh_token: string;
   token_type: string;
   user: User;
+}
+
+interface RefreshResponse {
+  access_token: string;
+  refresh_token: string;
 }
 
 export const authApi = {
@@ -60,6 +93,13 @@ export const authApi = {
   async getMe(token: string): Promise<User> {
     const { data } = await api.get<User>("/api/v1/auth/me", {
       headers: { Authorization: `Bearer ${token}` },
+    });
+    return data;
+  },
+
+  async refreshToken(refreshToken: string): Promise<RefreshResponse> {
+    const { data } = await api.post<RefreshResponse>("/api/v1/auth/refresh", {
+      refresh_token: refreshToken,
     });
     return data;
   },

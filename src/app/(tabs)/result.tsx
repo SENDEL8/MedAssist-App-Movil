@@ -95,6 +95,15 @@ export default function ResultScreen() {
             <Text style={styles.cardBody}>{recomendacion}</Text>
           )}
         </View>
+
+        {/* Permanent Medical Disclaimer */}
+        <View style={styles.disclaimerCard}>
+          <Text style={styles.disclaimerIcon}>🏥</Text>
+          <Text style={styles.disclaimerText}>
+            Este analisis es solo orientativo y no reemplaza un diagnostico medico profesional.
+            Ante cualquier duda o empeoramiento de sintomas, consulta con un profesional de salud.
+          </Text>
+        </View>
       </ScrollView>
 
       {/* Bottom Button */}
@@ -167,6 +176,20 @@ const styles = StyleSheet.create({
   /* Bullets */
   bulletRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 10 },
   bulletDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#16a34a", marginRight: 12, marginTop: 7 },
+
+  /* Permanent Disclaimer */
+  disclaimerCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: "#f0fdf4",
+    borderWidth: 1,
+    borderColor: "#bbf7d0",
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+  },
+  disclaimerIcon: { fontSize: 22, marginRight: 10, marginTop: 0 },
+  disclaimerText: { flex: 1, fontSize: 13, color: "#15803d", lineHeight: 20, fontStyle: "italic" },
 
   /* Bottom */
   bottomBar: { paddingHorizontal: 18, paddingVertical: 14, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: "#f3f4f6" },

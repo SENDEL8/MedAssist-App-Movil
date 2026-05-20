@@ -1,6 +1,6 @@
 # MedAssist — App Movil
 
-App movil de MedAssist, un asistente medico personal con autenticacion segura, consultas medicas con IA y recordatorios de medicamentos.
+App movil de MedAssist, un asistente medico personal con autenticacion segura, consultas medicas con IA, analisis de examenes de laboratorio y recordatorios de medicamentos.
 
 ## Stack
 
@@ -11,9 +11,10 @@ App movil de MedAssist, un asistente medico personal con autenticacion segura, c
 | Navegacion | Expo Router |
 | Estado | Zustand |
 | Estilos | StyleSheet nativo |
-| HTTP | Axios |
-| Storage | expo-secure-store |
+| HTTP | Axios + interceptores |
+| Storage | expo-secure-store (nativo) / sessionStorage (web) |
 | Notificaciones | expo-notifications |
+| Imagenes | expo-image-picker + expo-image-manipulator |
 
 ## Requisitos
 
@@ -29,14 +30,17 @@ cd mobile
 
 # Instalar dependencias
 pnpm install
+
+# Configurar URL de la API
+cp .env.example .env
 ```
 
 ## Configuracion
 
-La URL de la API se configura en `src/constants/config.ts`:
+Edita `.env` con la URL de tu backend:
 
-```typescript
-const LOCAL_IP = "192.168.0.XXX";  // IP de tu PC en la red WiFi
+```env
+EXPO_PUBLIC_API_URL=http://192.168.0.XXX:8000
 ```
 
 Para dispositivo fisico, usa la IP de tu PC (no `localhost`):
@@ -78,35 +82,41 @@ mobile/
 │   │   │   └── register.tsx          # Pantalla de registro
 │   │   └── (tabs)/                   # Grupo de tabs (protegido)
 │   │       ├── _layout.tsx           # Configuracion de tabs
-│   │       ├── index.tsx             # Home screen
+│   │       ├── index.tsx             # Home screen + dashboard
 │   │       ├── consultation.tsx      # Formulario de consulta medica
 │   │       ├── result.tsx            # Resultado de consulta IA
 │   │       ├── history.tsx           # Historial de consultas
+│   │       ├── lab-exam.tsx          # Captura de examen (camara/galeria)
+│   │       ├── lab-result.tsx        # Resultado de analisis de examen
 │   │       └── alerts.tsx            # Alertas de medicamentos
 │   ├── store/
-│   │   ├── authStore.ts              # Zustand auth state
+│   │   ├── authStore.ts              # Zustand auth + refresh tokens
 │   │   └── medicationStore.ts        # Zustand medicamentos + notificaciones
 │   ├── services/
-│   │   ├── api.ts                    # Axios client + interceptors
+│   │   ├── api.ts                    # Axios client + interceptor 401 + labsApi
 │   │   └── notificationService.ts    # Programar/cancelar notificaciones
 │   ├── utils/
 │   │   └── storage.ts                # Storage wrapper (web + native)
 │   └── constants/
 │       ├── config.ts                 # API URL por plataforma
 │       └── theme.ts                  # Colores y estilos globales
+├── .env.example                      # Template de variables de entorno
 └── package.json
 ```
 
 ## Pantallas
 
 ### Autenticacion
-- **Login:** Email + contrasena
+- **Login:** Email + contrasena con refresh token
 - **Registro:** Nombre + email + contrasena + confirmacion
 
 ### Tabs principales
-- **Inicio:** Saludo personalizado, accesos rapidos, logout
+- **Inicio:** Saludo personalizado, accesos rapidos a consulta y examenes, logout
 - **Consulta:** Formulario con datos del paciente, signos vitales, sintomas
+- **Resultado:** Analisis IA con nivel de atencion, recomendaciones y disclaimer permanente
 - **Historial:** Lista de consultas anteriores con detalles
+- **Lab Exam:** Captura de examen via camara o galeria (soporte web + nativo)
+- **Lab Result:** Valores extraidos, flags fuera de rango, explicacion y disclaimer
 - **Alertas:** Gestion de medicamentos con notificaciones programadas
 
 ## Autenticacion
@@ -116,8 +126,9 @@ mobile/
 1. **App inicia** → Verifica token guardado
 2. **Si hay token valido** → Redirige a `(tabs)/`
 3. **Si no hay token** → Redirige a `(auth)/login`
-4. **Login exitoso** → Guarda token + usuario, redirige a `(tabs)/`
-5. **Logout** → Limpia storage, redirige a login
+4. **Login exitoso** → Guarda access token + refresh token + usuario, redirige a `(tabs)/`
+5. **Token expirado (401)** → Interceptor usa refresh token automaticamente
+6. **Logout** → Limpia storage, redirige a login
 
 ### Validaciones
 
@@ -126,17 +137,37 @@ mobile/
 - Contrasena requerida
 
 **Registro:**
-- Nombre: minimo 2 caracteres
+- Nombre: minimo 2 caracteres, sin HTML
 - Email: formato valido, unico
-- Contrasena: 8+ chars, mayuscula, minuscula, numero
+- Contrasena: 8+ chars, mayuscula, minuscula, numero, caracter especial
 - Confirmar contrasena: debe coincidir
 
 ### Seguridad
 
-- **Tokens:** Almacenados en `expo-secure-store` (nativo) o `localStorage` (web)
+- **Tokens:** Almacenados en `expo-secure-store` (nativo) o `sessionStorage` (web)
+- **Refresh tokens:** 7 dias de expiracion, rotacion automatica en 401
 - **Expiracion:** Se verifica `exp` claim antes de restaurar sesion
-- **401 handler:** Interceptor de Axios limpia token automaticamente
+- **401 handler:** Interceptor de Axios reintentara con refresh token antes de hacer logout
 - **HTTPS:** Requerido en produccion
+
+## Analisis de Examenes
+
+### Flujo
+1. Usuario selecciona camara o galeria
+2. Imagen se comprime con `expo-image-manipulator` (omitido en web)
+3. Se sube como `FormData` al endpoint `/api/v1/labs/analyze`
+4. Gemini 2.0 Flash analiza la imagen y extrae valores
+5. Resultado se muestra con valores fuera de rango marcados
+
+### Soporte multiplataforma
+- **Mobile:** `expo-image-picker` + compresion + `FormData` nativo
+- **Web:** `expo-image-picker` + `fetch()` → `blob()` → `FormData` (sin compresion)
+
+### Validaciones del backend
+- Solo JPEG, PNG, WebP
+- Validacion por magic bytes (no Content-Type del cliente)
+- Tamano maximo: 10 MB
+- Proteccion contra path traversal
 
 ## Alertas de Medicamentos
 
@@ -160,9 +191,18 @@ mobile/
 |---|---|---|
 | `POST` | `/api/v1/auth/register` | Registro |
 | `POST` | `/api/v1/auth/login` | Login |
+| `POST` | `/api/v1/auth/refresh` | Renovar token |
 | `GET` | `/api/v1/auth/me` | Perfil |
 | `POST` | `/api/v1/medical/consultation` | Consulta medica |
 | `GET` | `/api/v1/medical/consultations` | Historial |
+| `POST` | `/api/v1/labs/analyze` | Analizar examen |
+| `GET` | `/api/v1/labs/history` | Historial de examenes |
+
+## Disclaimer Medico
+
+Todas las pantallas de resultado incluyen un disclaimer permanente:
+
+> "Este analisis es solo orientativo y no reemplaza un diagnostico medico profesional. Ante cualquier duda o resultado fuera de rango, consulta con un profesional de salud."
 
 ## Troubleshooting
 
@@ -183,6 +223,11 @@ pnpm run android
 ### Notificaciones no funcionan en Expo Go
 Esperado desde SDK 53. Usa `npx expo run:android` para un development build.
 
+### Error de conexion al backend
+1. Verifica que `EXPO_PUBLIC_API_URL` en `.env` apunta a la IP correcta
+2. Backend debe correr con `--host 0.0.0.0`
+3. Firewall de Windows debe permitir puerto 8000
+
 ## Proximos pasos
 
 - [ ] Notificaciones funcionando en development build
@@ -190,3 +235,4 @@ Esperado desde SDK 53. Usa `npx expo run:android` para un development build.
 - [ ] Iconos de tab bar
 - [ ] Editar medicamentos existentes
 - [ ] Sonido personalizado para alertas
+- [ ] Soporte offline (queue de requests)

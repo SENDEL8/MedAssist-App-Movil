@@ -47,6 +47,7 @@ export default function RegisterScreen() {
     if (!/[A-Z]/.test(value)) { setPasswordError("Debe tener una mayuscula"); return false; }
     if (!/[a-z]/.test(value)) { setPasswordError("Debe tener una minuscula"); return false; }
     if (!/[0-9]/.test(value)) { setPasswordError("Debe tener un numero"); return false; }
+    if (!/[!@#$%^&*()_+\-=[\]{}|;:,.<>?]/.test(value)) { setPasswordError("Debe tener un caracter especial (!@#$%^&*...)"); return false; }
     setPasswordError("");
     return true;
   };

@@ -98,6 +98,15 @@ export default function LabResultScreen() {
         </View>
       )}
 
+      {/* Disclaimer Card - Always visible */}
+      <View style={styles.disclaimerCard}>
+        <Text style={styles.disclaimerIcon}>🏥</Text>
+        <Text style={styles.disclaimerText}>
+          Este analisis es solo orientativo y no reemplaza un diagnostico medico profesional.
+          Ante cualquier duda o resultado fuera de rango, consulta con un profesional de salud.
+        </Text>
+      </View>
+
       {/* New Exam Button */}
       <TouchableOpacity
         style={styles.newExamButton}
@@ -187,6 +196,20 @@ const styles = StyleSheet.create({
 
   /* Summary */
   summaryText: { fontSize: 15, color: "#374151", lineHeight: 22 },
+
+  /* Disclaimer Card */
+  disclaimerCard: {
+    backgroundColor: "#f0fdf4",
+    borderWidth: 1,
+    borderColor: "#bbf7d0",
+    borderRadius: 12,
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 16,
+  },
+  disclaimerIcon: { fontSize: 18, marginRight: 10, marginTop: 2 },
+  disclaimerText: { flex: 1, fontSize: 12, color: "#166534", lineHeight: 18 },
 
   /* New Exam Button */
   newExamButton: {
