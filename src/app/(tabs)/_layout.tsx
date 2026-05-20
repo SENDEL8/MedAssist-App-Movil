@@ -44,6 +44,15 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="alerts"
+        options={{
+          title: "Alertas",
+          tabBarLabel: ({ focused }) => (
+            <Text style={{ color: focused ? "#16a34a" : "#6b7280" }}>Alertas</Text>
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="result"
         options={{
           href: null,

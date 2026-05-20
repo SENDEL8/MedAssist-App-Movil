@@ -1,0 +1,453 @@
+import { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  StatusBar,
+  ActivityIndicator,
+  Modal,
+  Platform,
+} from "react-native";
+import { useMedicationStore } from "@/store/medicationStore";
+import { Medication } from "@/services/notificationService";
+import Constants from "expo-constants";
+
+const isExpoGo = Constants.appOwnership === "expo";
+
+const FREQUENCY_OPTIONS = [
+  { label: "Cada 4 horas", value: 4 },
+  { label: "Cada 6 horas", value: 6 },
+  { label: "Cada 8 horas", value: 8 },
+  { label: "Cada 12 horas", value: 12 },
+  { label: "Cada 24 horas", value: 24 },
+];
+
+export default function AlertsScreen() {
+  const { medications, isLoading, error, permissionGranted, loadMedications, addMedication, removeMedication, toggleMedication, clearError } = useMedicationStore();
+  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState("");
+  const [dosage, setDosage] = useState("");
+  const [frequencyHours, setFrequencyHours] = useState(8);
+  const [startTime, setStartTime] = useState("08:00");
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    loadMedications();
+  }, []);
+
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    if (!name.trim()) errors.name = "Ingresa el nombre del medicamento";
+    if (!dosage.trim()) errors.dosage = "Ingresa la dosis (ej. 500mg)";
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleAdd = async () => {
+    if (!validateForm()) return;
+
+    await addMedication({
+      name: name.trim(),
+      dosage: dosage.trim(),
+      frequencyHours,
+      startTime,
+    });
+
+    if (!useMedicationStore.getState().error) {
+      setName("");
+      setDosage("");
+      setFrequencyHours(8);
+      setStartTime("08:00");
+      setShowForm(false);
+      setFormErrors({});
+    }
+  };
+
+  const handleRemove = (medication: Medication) => {
+    Alert.alert(
+      "Eliminar medicamento",
+      `¿Deseas eliminar ${medication.name}?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: () => removeMedication(medication.id),
+        },
+      ]
+    );
+  };
+
+  const handleToggle = (id: string) => {
+    toggleMedication(id);
+  };
+
+  const formatTimeDisplay = (time: string) => {
+    const [hours, minutes] = time.split(":").map(Number);
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
+  };
+
+  if (isLoading && medications.length === 0) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#16a34a" />
+        <Text style={styles.loadingText}>Cargando medicamentos...</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" backgroundColor="#15803d" />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Alertas de Medicamentos</Text>
+        <Text style={styles.headerSub}>Programa tus recordatorios</Text>
+      </View>
+
+      {isExpoGo ? (
+        <View style={styles.warningBanner}>
+          <Text style={styles.warningText}>
+            Modo demo (Expo Go): las notificaciones requieren un build de desarrollo. Los medicamentos se guardan pero no generan alertas reales.
+          </Text>
+        </View>
+      ) : !permissionGranted && (
+        <View style={styles.warningBanner}>
+          <Text style={styles.warningText}>
+            Activa los permisos de notificacion para programar alertas.
+          </Text>
+        </View>
+      )}
+
+      <ScrollView
+        style={styles.body}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Lista de medicamentos */}
+        {medications.length > 0 && (
+          <>
+            <Text style={styles.sectionLabel}>
+              Tus medicamentos ({medications.length})
+            </Text>
+
+            {medications.map((med) => (
+              <View key={med.id} style={[styles.medCard, !med.isActive && styles.medCardInactive]}>
+                <View style={styles.medHeader}>
+                  <View style={styles.medInfo}>
+                    <Text style={styles.medName}>{med.name}</Text>
+                    <Text style={styles.medDosage}>{med.dosage}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.toggleBtn, med.isActive && styles.toggleBtnActive]}
+                    onPress={() => handleToggle(med.id)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.toggleText, med.isActive && styles.toggleTextActive]}>
+                      {med.isActive ? "ON" : "OFF"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.medDetails}>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailIcon}>⏰</Text>
+                    <Text style={styles.detailText}>
+                      {formatTimeDisplay(med.startTime)} - Cada {med.frequencyHours}h
+                    </Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.deleteBtn}
+                  onPress={() => handleRemove(med)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.deleteText}>Eliminar</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </>
+        )}
+
+        {/* Empty state */}
+        {medications.length === 0 && (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyIcon}>💊</Text>
+            <Text style={styles.emptyTitle}>Sin medicamentos</Text>
+            <Text style={styles.emptyDesc}>
+              Agrega tu primer medicamento para recibir recordatorios.
+            </Text>
+          </View>
+        )}
+
+        {/* Boton agregar */}
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => setShowForm(true)}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.addButtonText}>+ Agregar Medicamento</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {/* Modal formulario */}
+      <Modal
+        visible={showForm}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowForm(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Nuevo Medicamento</Text>
+              <TouchableOpacity
+                onPress={() => { setShowForm(false); setFormErrors({}); }}
+                style={styles.closeBtn}
+              >
+                <Text style={styles.closeText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Nombre del medicamento *</Text>
+                <TextInput
+                  style={[styles.input, formErrors.name && styles.inputError]}
+                  placeholder="Ej. Paracetamol"
+                  value={name}
+                  onChangeText={(t) => { setName(t); setFormErrors({ ...formErrors, name: "" }); }}
+                />
+                {formErrors.name ? <Text style={styles.fieldError}>{formErrors.name}</Text> : null}
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Dosis *</Text>
+                <TextInput
+                  style={[styles.input, formErrors.dosage && styles.inputError]}
+                  placeholder="Ej. 500mg"
+                  value={dosage}
+                  onChangeText={(t) => { setDosage(t); setFormErrors({ ...formErrors, dosage: "" }); }}
+                />
+                {formErrors.dosage ? <Text style={styles.fieldError}>{formErrors.dosage}</Text> : null}
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Frecuencia *</Text>
+                <View style={styles.frequencyOptions}>
+                  {FREQUENCY_OPTIONS.map((opt) => (
+                    <TouchableOpacity
+                      key={opt.value}
+                      style={[styles.freqBtn, frequencyHours === opt.value && styles.freqBtnActive]}
+                      onPress={() => setFrequencyHours(opt.value)}
+                    >
+                      <Text style={[styles.freqText, frequencyHours === opt.value && styles.freqTextActive]}>
+                        {opt.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Hora de inicio *</Text>
+                <TouchableOpacity
+                  style={styles.timePickerBtn}
+                  onPress={() => {
+                    const hours = startTime.split(":")[0];
+                    const minutes = startTime.split(":")[1];
+                    Alert.prompt(
+                      "Hora de inicio",
+                      "Formato HH:MM (24h)",
+                      (val) => {
+                        if (val && /^\d{1,2}:\d{2}$/.test(val)) {
+                          setStartTime(val);
+                        }
+                      },
+                      "plain-text",
+                      startTime
+                    );
+                  }}
+                >
+                  <Text style={styles.timePickerText}>{startTime}</Text>
+                  <Text style={styles.timePickerIcon}>🕐</Text>
+                </TouchableOpacity>
+              </View>
+
+              {error && (
+                <View style={styles.errorBanner}>
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={[styles.submitBtn, isLoading && styles.submitBtnDisabled]}
+                onPress={handleAdd}
+                disabled={isLoading}
+                activeOpacity={0.85}
+              >
+                {isLoading ? (
+                  <View style={styles.submitRow}>
+                    <ActivityIndicator size="small" color="#fff" />
+                    <Text style={styles.submitText}>Guardando...</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.submitText}>Programar Alertas</Text>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: "#f8fafc" },
+  loadingContainer: { flex: 1, backgroundColor: "#fff", alignItems: "center", justifyContent: "center" },
+  loadingText: { marginTop: 12, fontSize: 16, color: "#6b7280" },
+
+  header: { backgroundColor: "#15803d", paddingTop: 50, paddingBottom: 24, paddingHorizontal: 24 },
+  headerTitle: { fontSize: 24, fontWeight: "bold", color: "#fff" },
+  headerSub: { fontSize: 15, color: "#bbf7d0", marginTop: 4 },
+
+  warningBanner: { backgroundColor: "#fef3c7", padding: 12, marginHorizontal: 18, marginTop: 12, borderRadius: 8 },
+  warningText: { fontSize: 13, color: "#92400e", textAlign: "center" },
+
+  body: { flex: 1 },
+  scrollContent: { paddingHorizontal: 18, paddingTop: 20, paddingBottom: 32 },
+
+  sectionLabel: { fontSize: 18, fontWeight: "700", color: "#1f2937", marginBottom: 16 },
+
+  medCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  medCardInactive: { opacity: 0.6 },
+
+  medHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  medInfo: { flex: 1 },
+  medName: { fontSize: 18, fontWeight: "600", color: "#1f2937" },
+  medDosage: { fontSize: 14, color: "#6b7280", marginTop: 2 },
+
+  toggleBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: "#e5e7eb",
+  },
+  toggleBtnActive: { backgroundColor: "#16a34a" },
+  toggleText: { fontSize: 12, fontWeight: "700", color: "#6b7280" },
+  toggleTextActive: { color: "#fff" },
+
+  medDetails: { marginBottom: 12 },
+  detailItem: { flexDirection: "row", alignItems: "center" },
+  detailIcon: { fontSize: 16, marginRight: 8 },
+  detailText: { fontSize: 14, color: "#4b5563" },
+
+  deleteBtn: { alignSelf: "flex-end", paddingVertical: 6, paddingHorizontal: 12 },
+  deleteText: { fontSize: 13, color: "#ef4444", fontWeight: "500" },
+
+  emptyState: { alignItems: "center", paddingVertical: 40 },
+  emptyIcon: { fontSize: 56, marginBottom: 16 },
+  emptyTitle: { fontSize: 20, fontWeight: "700", color: "#1f2937", marginBottom: 8 },
+  emptyDesc: { fontSize: 15, color: "#6b7280", textAlign: "center" },
+
+  addButton: {
+    backgroundColor: "#16a34a",
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginTop: 8,
+    shadowColor: "#16a34a",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  addButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: "85%",
+  },
+  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
+  modalTitle: { fontSize: 22, fontWeight: "bold", color: "#1f2937" },
+  closeBtn: { padding: 8 },
+  closeText: { fontSize: 20, color: "#6b7280" },
+
+  formGroup: { marginBottom: 18 },
+  label: { fontSize: 14, fontWeight: "600", color: "#4b5563", marginBottom: 8 },
+  input: {
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    backgroundColor: "#f9fafb",
+  },
+  inputError: { borderColor: "#ef4444", backgroundColor: "#fef2f2" },
+  fieldError: { color: "#ef4444", fontSize: 12, marginTop: 4 },
+
+  frequencyOptions: { gap: 8 },
+  freqBtn: {
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "#f9fafb",
+  },
+  freqBtnActive: { borderColor: "#16a34a", backgroundColor: "#dcfce7" },
+  freqText: { fontSize: 15, color: "#374151" },
+  freqTextActive: { color: "#15803d", fontWeight: "600" },
+
+  timePickerBtn: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    backgroundColor: "#f9fafb",
+  },
+  timePickerText: { fontSize: 18, fontWeight: "600", color: "#1f2937" },
+  timePickerIcon: { fontSize: 22 },
+
+  errorBanner: { backgroundColor: "#fef2f2", padding: 12, borderRadius: 8, marginBottom: 16 },
+  errorText: { fontSize: 13, color: "#dc2626", textAlign: "center" },
+
+  submitBtn: {
+    backgroundColor: "#16a34a",
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  submitBtnDisabled: { opacity: 0.6 },
+  submitText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  submitRow: { flexDirection: "row", alignItems: "center" },
+});

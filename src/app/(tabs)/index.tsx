@@ -102,6 +102,21 @@ export default function HomeScreen() {
           <Text style={styles.actionArrow}>›</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={styles.actionCard}
+          onPress={() => router.push("/(tabs)/alerts" as any)}
+          activeOpacity={0.85}
+        >
+          <View style={[styles.actionIconBg, { backgroundColor: "#fef3c7" }]}>
+            <Text style={styles.actionIcon}>💊</Text>
+          </View>
+          <View style={styles.actionInfo}>
+            <Text style={styles.actionTitle}>Alertas Medicamentos</Text>
+            <Text style={styles.actionDesc}>Programa tus recordatorios</Text>
+          </View>
+          <Text style={styles.actionArrow}>›</Text>
+        </TouchableOpacity>
+
         {/* Logout */}
         <TouchableOpacity
           style={styles.logoutBtn}
