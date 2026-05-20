@@ -156,7 +156,6 @@ export interface LabExamResponse {
 
 export interface LabExamHistoryItem {
   id: number;
-  image_path: string;
   extracted_values: ExtractedValue[];
   plain_language_summary: string;
   medical_warning: string;

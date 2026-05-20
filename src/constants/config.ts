@@ -1,10 +1,16 @@
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 
 const getApiUrl = (): string => {
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
 
   if (envUrl) {
     return envUrl;
+  }
+
+  const extraUrl = Constants.expoConfig?.extra?.API_URL as string | undefined;
+  if (extraUrl) {
+    return extraUrl;
   }
 
   if (__DEV__) {
@@ -14,10 +20,7 @@ const getApiUrl = (): string => {
     return "http://10.0.2.2:8000";
   }
 
-  throw new Error(
-    "EXPO_PUBLIC_API_URL must be set in production. " +
-    "Create a .env file with EXPO_PUBLIC_API_URL=https://your-api-domain.com"
-  );
+  return "http://192.168.1.17:8000";
 };
 
 export const API_URL = getApiUrl();
