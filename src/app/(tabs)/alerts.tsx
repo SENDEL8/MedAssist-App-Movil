@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
+  Pressable,
 } from "react-native";
 import { useMedicationStore } from "@/store/medicationStore";
 import { Medication } from "@/services/notificationService";
@@ -33,6 +34,8 @@ export default function AlertsScreen() {
   const [dosage, setDosage] = useState("");
   const [frequencyHours, setFrequencyHours] = useState(8);
   const [startTime, setStartTime] = useState("08:00");
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [tempTime, setTempTime] = useState("08:00");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -262,22 +265,11 @@ export default function AlertsScreen() {
                 <TouchableOpacity
                   style={styles.timePickerBtn}
                   onPress={() => {
-                    const hours = startTime.split(":")[0];
-                    const minutes = startTime.split(":")[1];
-                    Alert.prompt(
-                      "Hora de inicio",
-                      "Formato HH:MM (24h)",
-                      (val) => {
-                        if (val && /^\d{1,2}:\d{2}$/.test(val)) {
-                          setStartTime(val);
-                        }
-                      },
-                      "plain-text",
-                      startTime
-                    );
+                    setTempTime(startTime);
+                    setShowTimePicker(true);
                   }}
                 >
-                  <Text style={styles.timePickerText}>{startTime}</Text>
+                  <Text style={styles.timePickerText}>{formatTimeDisplay(startTime)}</Text>
                   <Text style={styles.timePickerIcon}>🕐</Text>
                 </TouchableOpacity>
               </View>
@@ -304,6 +296,77 @@ export default function AlertsScreen() {
                 )}
               </TouchableOpacity>
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Time Picker Modal */}
+      <Modal
+        visible={showTimePicker}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setShowTimePicker(false)}
+      >
+        <View style={styles.pickerOverlay}>
+          <View style={styles.pickerContent}>
+            <Text style={styles.pickerTitle}>Selecciona la hora</Text>
+            
+            <View style={styles.pickerRow}>
+              <View style={styles.pickerColumn}>
+                <Text style={styles.pickerLabel}>Hora</Text>
+                <ScrollView style={styles.pickerScroll} showsVerticalScrollIndicator={false}>
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <Pressable
+                      key={i}
+                      style={[styles.pickerItem, parseInt(tempTime.split(":")[0]) === i && styles.pickerItemSelected]}
+                      onPress={() => {
+                        const mins = tempTime.split(":")[1];
+                        setTempTime(`${i.toString().padStart(2, "0")}:${mins}`);
+                      }}
+                    >
+                      <Text style={[styles.pickerItemText, parseInt(tempTime.split(":")[0]) === i && styles.pickerItemTextSelected]}>
+                        {i.toString().padStart(2, "0")}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+              
+              <View style={styles.pickerColumn}>
+                <Text style={styles.pickerLabel}>Minuto</Text>
+                <ScrollView style={styles.pickerScroll} showsVerticalScrollIndicator={false}>
+                  {Array.from({ length: 60 }, (_, i) => (
+                    <Pressable
+                      key={i}
+                      style={[styles.pickerItem, parseInt(tempTime.split(":")[1]) === i && styles.pickerItemSelected]}
+                      onPress={() => {
+                        const hours = tempTime.split(":")[0];
+                        setTempTime(`${hours}:${i.toString().padStart(2, "0")}`);
+                      }}
+                    >
+                      <Text style={[styles.pickerItemText, parseInt(tempTime.split(":")[1]) === i && styles.pickerItemTextSelected]}>
+                        {i.toString().padStart(2, "0")}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+
+            <View style={styles.pickerButtons}>
+              <TouchableOpacity style={styles.pickerCancelBtn} onPress={() => setShowTimePicker(false)}>
+                <Text style={styles.pickerCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.pickerConfirmBtn}
+                onPress={() => {
+                  setStartTime(tempTime);
+                  setShowTimePicker(false);
+                }}
+              >
+                <Text style={styles.pickerConfirmText}>Aceptar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -450,4 +513,21 @@ const styles = StyleSheet.create({
   submitBtnDisabled: { opacity: 0.6 },
   submitText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
   submitRow: { flexDirection: "row", alignItems: "center" },
+
+  pickerOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" },
+  pickerContent: { backgroundColor: "#fff", borderRadius: 20, padding: 20, width: "80%", maxWidth: 300 },
+  pickerTitle: { fontSize: 18, fontWeight: "600", color: "#1f2937", textAlign: "center", marginBottom: 16 },
+  pickerRow: { flexDirection: "row", justifyContent: "center", gap: 16 },
+  pickerColumn: { alignItems: "center" },
+  pickerLabel: { fontSize: 14, fontWeight: "500", color: "#6b7280", marginBottom: 8 },
+  pickerScroll: { height: 150, width: 60 },
+  pickerItem: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 },
+  pickerItemSelected: { backgroundColor: "#16a34a" },
+  pickerItemText: { fontSize: 18, color: "#374151", textAlign: "center" },
+  pickerItemTextSelected: { color: "#fff", fontWeight: "600" },
+  pickerButtons: { flexDirection: "row", justifyContent: "space-between", marginTop: 20, gap: 12 },
+  pickerCancelBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: "#f3f4f6", alignItems: "center" },
+  pickerCancelText: { fontSize: 15, color: "#6b7280", fontWeight: "500" },
+  pickerConfirmBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: "#16a34a", alignItems: "center" },
+  pickerConfirmText: { fontSize: 15, color: "#fff", fontWeight: "600" },
 });

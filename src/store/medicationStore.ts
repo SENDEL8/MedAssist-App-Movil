@@ -57,7 +57,7 @@ export const useMedicationStore = create<MedicationState>((set, get) => ({
       const granted = await requestNotificationPermission();
 
       const newMedication: Medication = {
-        id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
         name: data.name,
         dosage: data.dosage,
         frequencyHours: data.frequencyHours,
