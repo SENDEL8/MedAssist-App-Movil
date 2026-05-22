@@ -64,7 +64,7 @@ export default function RegisterScreen() {
     if (!validateFullName(fullName) || !validateEmail(email) || !validatePassword(password) || !validateConfirmPassword(confirmPassword)) return;
     try {
       await register(email.trim().toLowerCase(), password, fullName.trim());
-      router.replace("/(tabs)");
+      router.replace({ pathname: "/(auth)/verify-email", params: { email: email.trim().toLowerCase() } });
     } catch (err: any) {
       Alert.alert("Error", err.message);
     }
@@ -92,25 +92,25 @@ export default function RegisterScreen() {
 
           <View style={styles.field}>
             <Text style={styles.label}>Nombre completo</Text>
-            <TextInput style={[styles.input, fullNameError && styles.inputError]} placeholder="Juan Perez" returnKeyType="next" value={fullName} onChangeText={(t) => { setFullName(t); if (fullNameError) validateFullName(t); }} />
+            <TextInput style={[styles.input, fullNameError && styles.inputError]} placeholder="Juan Perez" placeholderTextColor="#9ca3af" returnKeyType="next" value={fullName} onChangeText={(t) => { setFullName(t); if (fullNameError) validateFullName(t); }} />
             {fullNameError ? <Text style={styles.fieldError}>{fullNameError}</Text> : null}
           </View>
 
           <View style={styles.field}>
             <Text style={styles.label}>Correo electronico</Text>
-            <TextInput style={[styles.input, emailError && styles.inputError]} placeholder="usuario@dominio.com" keyboardType="email-address" autoCapitalize="none" returnKeyType="next" value={email} onChangeText={(t) => { setEmail(t); if (emailError) validateEmail(t); }} />
+            <TextInput style={[styles.input, emailError && styles.inputError]} placeholder="usuario@dominio.com" placeholderTextColor="#9ca3af" keyboardType="email-address" autoCapitalize="none" returnKeyType="next" value={email} onChangeText={(t) => { setEmail(t); if (emailError) validateEmail(t); }} />
             {emailError ? <Text style={styles.fieldError}>{emailError}</Text> : null}
           </View>
 
           <View style={styles.field}>
             <Text style={styles.label}>Contrasena</Text>
-            <TextInput style={[styles.input, passwordError && styles.inputError]} placeholder="Minimo 8 caracteres" secureTextEntry autoCapitalize="none" autoCorrect={false} returnKeyType="next" value={password} onChangeText={(t) => { setPassword(t); if (passwordError) validatePassword(t); }} />
+            <TextInput style={[styles.input, passwordError && styles.inputError]} placeholder="Minimo 8 caracteres" placeholderTextColor="#9ca3af" secureTextEntry autoCapitalize="none" autoCorrect={false} returnKeyType="next" value={password} onChangeText={(t) => { setPassword(t); if (passwordError) validatePassword(t); }} />
             {passwordError ? <Text style={styles.fieldError}>{passwordError}</Text> : null}
           </View>
 
           <View style={styles.field}>
             <Text style={styles.label}>Confirmar contrasena</Text>
-            <TextInput style={[styles.input, confirmPasswordError && styles.inputError]} placeholder="Repite tu contrasena" secureTextEntry autoCapitalize="none" autoCorrect={false} returnKeyType="done" onSubmitEditing={handleRegister} value={confirmPassword} onChangeText={(t) => { setConfirmPassword(t); if (confirmPasswordError) validateConfirmPassword(t); }} />
+            <TextInput style={[styles.input, confirmPasswordError && styles.inputError]} placeholder="Repite tu contrasena" placeholderTextColor="#9ca3af" secureTextEntry autoCapitalize="none" autoCorrect={false} returnKeyType="done" onSubmitEditing={handleRegister} value={confirmPassword} onChangeText={(t) => { setConfirmPassword(t); if (confirmPasswordError) validateConfirmPassword(t); }} />
             {confirmPasswordError ? <Text style={styles.fieldError}>{confirmPasswordError}</Text> : null}
           </View>
 
@@ -161,6 +161,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
+    color: "#1f2937",
     backgroundColor: "#f9fafb",
   },
   inputError: { borderColor: "#ef4444", backgroundColor: "#fef2f2" },

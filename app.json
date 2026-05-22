@@ -62,6 +62,7 @@
       "reactCompiler": true
     },
     "extra": {
+      "API_URL": "http://192.168.0.199:8000",
       "router": {},
       "eas": {
         "projectId": "31d3666b-c65a-4e93-a84f-8fa9996005ac"

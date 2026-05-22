@@ -95,7 +95,6 @@ export default function LabExamScreen() {
         params: {
           extracted_values: JSON.stringify(result.extracted_values),
           plain_language_summary: result.plain_language_summary,
-          medical_warning: result.medical_warning,
         },
       });
     } catch (err: any) {

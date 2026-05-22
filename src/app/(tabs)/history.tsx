@@ -12,9 +12,9 @@ import {
   StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { medicalApi } from "@/services/api";
+import { medicalApi, labsApi } from "@/services/api";
 
-interface HistoryItem {
+interface ConsultationItem {
   id: number;
   age: number | null;
   gender: string | null;
@@ -27,20 +27,34 @@ interface HistoryItem {
   resumen: string;
   nivel_atencion: string;
   recomendacion: string;
-  advertencia: string;
   created_at: string;
 }
 
+interface LabExamItem {
+  id: number;
+  extracted_values: any[];
+  plain_language_summary: string;
+  created_at: string;
+}
+
+type TabType = "consultas" | "examenes";
+
 export default function HistoryScreen() {
   const router = useRouter();
-  const [items, setItems] = useState<HistoryItem[]>([]);
+  const [activeTab, setActiveTab] = useState<TabType>("consultas");
+  const [consultations, setConsultations] = useState<ConsultationItem[]>([]);
+  const [labExams, setLabExams] = useState<LabExamItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchHistory = async () => {
+  const fetchData = async () => {
     try {
-      const data = await medicalApi.getConsultations();
-      setItems(data);
+      const [consults, exams] = await Promise.all([
+        medicalApi.getConsultations(),
+        labsApi.getLabExams(),
+      ]);
+      setConsultations(consults);
+      setLabExams(exams);
     } catch (err) {
       console.error("Error fetching history:", err);
     } finally {
@@ -49,7 +63,7 @@ export default function HistoryScreen() {
     }
   };
 
-  useFocusEffect(useCallback(() => { fetchHistory(); }, []));
+  useFocusEffect(useCallback(() => { fetchData(); }, []));
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -71,14 +85,23 @@ export default function HistoryScreen() {
     return { bg: "#f0fdf4", border: "#bbf7d0", text: "#16a34a", dot: "#22c55e" };
   };
 
-  const handlePress = (item: HistoryItem) => {
+  const handleConsultationPress = (item: ConsultationItem) => {
     router.push({
       pathname: "/(tabs)/result" as any,
       params: {
         resumen: item.resumen,
         nivel_atencion: item.nivel_atencion,
         recomendacion: item.recomendacion,
-        advertencia: item.advertencia,
+      },
+    });
+  };
+
+  const handleLabExamPress = (item: LabExamItem) => {
+    router.push({
+      pathname: "/(tabs)/lab-result" as any,
+      params: {
+        extracted_values: JSON.stringify(item.extracted_values),
+        plain_language_summary: item.plain_language_summary,
       },
     });
   };
@@ -91,60 +114,123 @@ export default function HistoryScreen() {
     );
   }
 
+  const items = activeTab === "consultas" ? consultations : labExams;
+  const outOfRangeCount = (item: LabExamItem) =>
+    item.extracted_values.filter((v: any) => v.is_out_of_range).length;
+
   return (
     <View style={styles.root}>
       <StatusBar barStyle="light-content" backgroundColor="#15803d" />
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Historial de Consultas</Text>
-        <Text style={styles.headerSub}>{items.length} consulta{items.length !== 1 ? "s" : ""} registrada{items.length !== 1 ? "s" : ""}</Text>
+        <Text style={styles.headerTitle}>Historial</Text>
+        <Text style={styles.headerSub}>Revisa tus consultas y examenes anteriores</Text>
+      </View>
+
+      {/* Tabs */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "consultas" && styles.tabActive]}
+          onPress={() => setActiveTab("consultas")}
+        >
+          <Text style={[styles.tabText, activeTab === "consultas" && styles.tabTextActive]}>
+            Consultas ({consultations.length})
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "examenes" && styles.tabActive]}
+          onPress={() => setActiveTab("examenes")}
+        >
+          <Text style={[styles.tabText, activeTab === "examenes" && styles.tabTextActive]}>
+            Examenes ({labExams.length})
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
         style={styles.body}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={fetchHistory} colors={["#16a34a"]} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={fetchData} colors={["#16a34a"]} />
         }
       >
         {items.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>📭</Text>
-            <Text style={styles.emptyText}>No tienes consultas todavia</Text>
+            <Text style={styles.emptyIcon}>{activeTab === "consultas" ? "📭" : "🔬"}</Text>
+            <Text style={styles.emptyText}>
+              No tienes {activeTab} todavia
+            </Text>
             <TouchableOpacity
               style={styles.emptyButton}
-              onPress={() => router.push("/(tabs)/consultation" as any)}
+              onPress={() => router.push(activeTab === "consultas" ? "/(tabs)/consultation" : "/(tabs)/lab-exam" as any)}
             >
-              <Text style={styles.emptyButtonText}>Hacer una consulta</Text>
+              <Text style={styles.emptyButtonText}>
+                {activeTab === "consultas" ? "Hacer una consulta" : "Analizar un examen"}
+              </Text>
             </TouchableOpacity>
           </View>
         ) : (
-          items.map((item) => {
-            const ls = getLevelStyle(item.nivel_atencion);
+          items.map((item: any) => {
+            if (activeTab === "consultas") {
+              const c = item as ConsultationItem;
+              const ls = getLevelStyle(c.nivel_atencion);
+              return (
+                <TouchableOpacity
+                  key={c.id}
+                  style={styles.card}
+                  onPress={() => handleConsultationPress(c)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.cardTop}>
+                    <View style={styles.dateRow}>
+                      <Text style={styles.dateIcon}>📅</Text>
+                      <Text style={styles.date}>{formatDate(c.created_at)}</Text>
+                    </View>
+                    <View style={[styles.levelBadge, { backgroundColor: ls.bg, borderColor: ls.border }]}>
+                      <View style={[styles.levelDot, { backgroundColor: ls.dot }]} />
+                      <Text style={[styles.levelText, { color: ls.text }]}>{c.nivel_atencion}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.symptomsRow}>
+                    <Text style={styles.symptomsIcon}>🤒</Text>
+                    <Text style={styles.symptoms} numberOfLines={2}>{c.symptoms}</Text>
+                  </View>
+                  <Text style={styles.summary} numberOfLines={2}>{c.resumen}</Text>
+                  <View style={styles.cardFooter}>
+                    <Text style={styles.tapHint}>Toca para ver detalles</Text>
+                    <Text style={styles.arrow}>›</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            }
+
+            const e = item as LabExamItem;
+            const oor = outOfRangeCount(e);
             return (
               <TouchableOpacity
-                key={item.id}
+                key={e.id}
                 style={styles.card}
-                onPress={() => handlePress(item)}
+                onPress={() => handleLabExamPress(e)}
                 activeOpacity={0.7}
               >
                 <View style={styles.cardTop}>
                   <View style={styles.dateRow}>
                     <Text style={styles.dateIcon}>📅</Text>
-                    <Text style={styles.date}>{formatDate(item.created_at)}</Text>
+                    <Text style={styles.date}>{formatDate(e.created_at)}</Text>
                   </View>
-                  <View style={[styles.levelBadge, { backgroundColor: ls.bg, borderColor: ls.border }]}>
-                    <View style={[styles.levelDot, { backgroundColor: ls.dot }]} />
-                    <Text style={[styles.levelText, { color: ls.text }]}>{item.nivel_atencion}</Text>
-                  </View>
+                  {oor > 0 && (
+                    <View style={[styles.levelBadge, { backgroundColor: "#fef2f2", borderColor: "#fca5a5" }]}>
+                      <View style={[styles.levelDot, { backgroundColor: "#ef4444" }]} />
+                      <Text style={[styles.levelText, { color: "#dc2626" }]}>{oor} fuera de rango</Text>
+                    </View>
+                  )}
                 </View>
-
                 <View style={styles.symptomsRow}>
-                  <Text style={styles.symptomsIcon}>🤒</Text>
-                  <Text style={styles.symptoms} numberOfLines={2}>{item.symptoms}</Text>
+                  <Text style={styles.symptomsIcon}>🔬</Text>
+                  <Text style={styles.symptoms} numberOfLines={2}>
+                    {e.extracted_values.length} valor(es) analizado(s)
+                  </Text>
                 </View>
-
-                <Text style={styles.summary} numberOfLines={2}>{item.resumen}</Text>
-
+                <Text style={styles.summary} numberOfLines={2}>{e.plain_language_summary}</Text>
                 <View style={styles.cardFooter}>
                   <Text style={styles.tapHint}>Toca para ver detalles</Text>
                   <Text style={styles.arrow}>›</Text>
@@ -164,8 +250,16 @@ const styles = StyleSheet.create({
   header: { backgroundColor: "#15803d", paddingTop: 50, paddingBottom: 24, paddingHorizontal: 24 },
   headerTitle: { fontSize: 24, fontWeight: "bold", color: "#fff" },
   headerSub: { fontSize: 14, color: "#bbf7d0", marginTop: 4 },
+
+  /* Tabs */
+  tabContainer: { flexDirection: "row", backgroundColor: "#fff", paddingHorizontal: 18, paddingTop: 16, paddingBottom: 0, gap: 8 },
+  tab: { flex: 1, paddingVertical: 12, alignItems: "center", borderBottomWidth: 2, borderBottomColor: "transparent" },
+  tabActive: { borderBottomColor: "#16a34a" },
+  tabText: { fontSize: 15, color: "#6b7280", fontWeight: "500" },
+  tabTextActive: { color: "#16a34a", fontWeight: "700" },
+
   body: { flex: 1 },
-  scrollContent: { paddingHorizontal: 18, paddingTop: 20, paddingBottom: 32 },
+  scrollContent: { paddingHorizontal: 18, paddingTop: 16, paddingBottom: 32 },
 
   /* Empty */
   emptyContainer: { alignItems: "center", marginTop: 80 },

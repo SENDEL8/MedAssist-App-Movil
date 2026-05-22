@@ -21,8 +21,11 @@ export default function TabsLayout() {
         options={{
           title: "Inicio",
           tabBarStyle: { display: "none" },
+          tabBarIcon: ({ focused }) => (
+            <Text style={{ fontSize: 22 }}>{focused ? "🏠" : "🏥"}</Text>
+          ),
           tabBarLabel: ({ focused }) => (
-            <Text style={{ color: focused ? "#16a34a" : "#6b7280" }}>Inicio</Text>
+            <Text style={{ color: focused ? "#16a34a" : "#6b7280", fontSize: 11 }}>Inicio</Text>
           ),
         }}
       />
@@ -30,8 +33,11 @@ export default function TabsLayout() {
         name="consultation"
         options={{
           title: "Consulta",
+          tabBarIcon: ({ focused }) => (
+            <Text style={{ fontSize: 22 }}>💬</Text>
+          ),
           tabBarLabel: ({ focused }) => (
-            <Text style={{ color: focused ? "#16a34a" : "#6b7280" }}>Consulta</Text>
+            <Text style={{ color: focused ? "#16a34a" : "#6b7280", fontSize: 11 }}>Consulta</Text>
           ),
         }}
       />
@@ -39,8 +45,11 @@ export default function TabsLayout() {
         name="history"
         options={{
           title: "Historial",
+          tabBarIcon: ({ focused }) => (
+            <Text style={{ fontSize: 22 }}>📋</Text>
+          ),
           tabBarLabel: ({ focused }) => (
-            <Text style={{ color: focused ? "#16a34a" : "#6b7280" }}>Historial</Text>
+            <Text style={{ color: focused ? "#16a34a" : "#6b7280", fontSize: 11 }}>Historial</Text>
           ),
         }}
       />
@@ -48,8 +57,11 @@ export default function TabsLayout() {
         name="alerts"
         options={{
           title: "Alertas",
+          tabBarIcon: ({ focused }) => (
+            <Text style={{ fontSize: 22 }}>🔔</Text>
+          ),
           tabBarLabel: ({ focused }) => (
-            <Text style={{ color: focused ? "#16a34a" : "#6b7280" }}>Alertas</Text>
+            <Text style={{ color: focused ? "#16a34a" : "#6b7280", fontSize: 11 }}>Alertas</Text>
           ),
         }}
       />
@@ -57,8 +69,11 @@ export default function TabsLayout() {
         name="lab-exam"
         options={{
           title: "Examenes",
+          tabBarIcon: ({ focused }) => (
+            <Text style={{ fontSize: 22 }}>🔬</Text>
+          ),
           tabBarLabel: ({ focused }) => (
-            <Text style={{ color: focused ? "#16a34a" : "#6b7280" }}>Examenes</Text>
+            <Text style={{ color: focused ? "#16a34a" : "#6b7280", fontSize: 11 }}>Examenes</Text>
           ),
         }}
       />

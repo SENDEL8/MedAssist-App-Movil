@@ -86,7 +86,6 @@ export default function ConsultationScreen() {
           resumen: result.resumen,
           nivel_atencion: result.nivel_atencion,
           recomendacion: result.recomendacion,
-          advertencia: result.advertencia,
         },
       });
     } catch (err: any) {
@@ -124,6 +123,7 @@ export default function ConsultationScreen() {
               <TextInput
                 style={[styles.input, errors.age && styles.inputError]}
                 placeholder="Ej. 25"
+                placeholderTextColor="#9ca3af"
                 keyboardType="number-pad"
                 value={age}
                 onChangeText={(t) => { setAge(t); setErrors({ ...errors, age: "" }); }}
@@ -182,6 +182,7 @@ export default function ConsultationScreen() {
               <TextInput
                 style={[styles.input, errors.systolicBp && styles.inputError]}
                 placeholder="Ej. 120"
+                placeholderTextColor="#9ca3af"
                 keyboardType="number-pad"
                 value={systolicBp}
                 onChangeText={(t) => { setSystolicBp(t); setErrors({ ...errors, systolicBp: "" }); }}
@@ -193,6 +194,7 @@ export default function ConsultationScreen() {
               <TextInput
                 style={[styles.input, errors.diastolicBp && styles.inputError]}
                 placeholder="Ej. 80"
+                placeholderTextColor="#9ca3af"
                 keyboardType="number-pad"
                 value={diastolicBp}
                 onChangeText={(t) => { setDiastolicBp(t); setErrors({ ...errors, diastolicBp: "" }); }}
@@ -236,6 +238,7 @@ export default function ConsultationScreen() {
           <TextInput
             style={styles.textArea}
             placeholder="Cuentanos mas sobre como te sientes..."
+            placeholderTextColor="#9ca3af"
             multiline
             numberOfLines={4}
             textAlignVertical="top"
@@ -301,6 +304,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 16,
+    color: "#1f2937",
     backgroundColor: "#f9fafb",
   },
   inputError: { borderColor: "#ef4444", backgroundColor: "#fef2f2" },
@@ -343,6 +347,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
+    color: "#1f2937",
     minHeight: 100,
     backgroundColor: "#f9fafb",
   },

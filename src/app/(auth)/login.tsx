@@ -75,6 +75,7 @@ export default function LoginScreen() {
             <TextInput
               style={[styles.input, emailError && styles.inputError]}
               placeholder="usuario@dominio.com"
+              placeholderTextColor="#9ca3af"
               keyboardType="email-address"
               autoCapitalize="none"
               returnKeyType="next"
@@ -89,6 +90,7 @@ export default function LoginScreen() {
             <TextInput
               style={[styles.input, passwordError && styles.inputError]}
               placeholder="Tu contrasena"
+              placeholderTextColor="#9ca3af"
               secureTextEntry
               autoCapitalize="none"
               autoCorrect={false}
@@ -157,6 +159,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
+    color: "#1f2937",
     backgroundColor: "#f9fafb",
   },
   inputError: { borderColor: "#ef4444", backgroundColor: "#fef2f2" },

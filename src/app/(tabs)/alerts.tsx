@@ -226,6 +226,7 @@ export default function AlertsScreen() {
                 <TextInput
                   style={[styles.input, formErrors.name && styles.inputError]}
                   placeholder="Ej. Paracetamol"
+                  placeholderTextColor="#9ca3af"
                   value={name}
                   onChangeText={(t) => { setName(t); setFormErrors({ ...formErrors, name: "" }); }}
                 />
@@ -237,6 +238,7 @@ export default function AlertsScreen() {
                 <TextInput
                   style={[styles.input, formErrors.dosage && styles.inputError]}
                   placeholder="Ej. 500mg"
+                  placeholderTextColor="#9ca3af"
                   value={dosage}
                   onChangeText={(t) => { setDosage(t); setFormErrors({ ...formErrors, dosage: "" }); }}
                 />
@@ -468,6 +470,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 16,
+    color: "#1f2937",
     backgroundColor: "#f9fafb",
   },
   inputError: { borderColor: "#ef4444", backgroundColor: "#fef2f2" },

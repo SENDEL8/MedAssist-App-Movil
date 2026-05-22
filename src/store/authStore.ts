@@ -11,6 +11,8 @@ interface AuthState {
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, full_name: string) => Promise<void>;
+  verifyEmail: (email: string, code: string) => Promise<void>;
+  resendCode: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   restoreSession: () => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
@@ -62,7 +64,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   register: async (email: string, password: string, full_name: string) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await authApi.register(email, password, full_name);
+      await authApi.register(email, password, full_name);
+      set({ isLoading: false });
+    } catch (err: any) {
+      const message = err.response?.data?.detail || "Error al registrar";
+      set({ error: message, isLoading: false });
+      throw new Error(message);
+    }
+  },
+
+  verifyEmail: async (email: string, code: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await authApi.verifyEmail(email, code);
       await storage.setItem(TOKEN_KEY, response.access_token);
       await storage.setItem(REFRESH_TOKEN_KEY, response.refresh_token);
       await storage.setItem(USER_KEY, JSON.stringify(response.user));
@@ -73,7 +87,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
       });
     } catch (err: any) {
-      const message = err.response?.data?.detail || "Error al registrar";
+      const message = err.response?.data?.detail || "Error al verificar";
+      set({ error: message, isLoading: false });
+      throw new Error(message);
+    }
+  },
+
+  resendCode: async (email: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      await authApi.resendCode(email);
+      set({ isLoading: false });
+    } catch (err: any) {
+      const message = err.response?.data?.detail || "Error al reenviar codigo";
       set({ error: message, isLoading: false });
       throw new Error(message);
     }

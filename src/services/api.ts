@@ -5,7 +5,7 @@ import { storage } from "@/utils/storage";
 const api = axios.create({
   baseURL: API_URL,
   headers: { "Content-Type": "application/json" },
-  timeout: 60000, // 60 seconds for AI calls
+  timeout: 60000,
 });
 
 api.interceptors.request.use(async (config) => {
@@ -67,17 +67,37 @@ interface AuthResponse {
   user: User;
 }
 
+interface RegisterResponse {
+  message: string;
+  email: string;
+}
+
 interface RefreshResponse {
   access_token: string;
   refresh_token: string;
 }
 
 export const authApi = {
-  async register(email: string, password: string, full_name: string): Promise<AuthResponse> {
-    const { data } = await api.post<AuthResponse>("/api/v1/auth/register", {
+  async register(email: string, password: string, full_name: string): Promise<RegisterResponse> {
+    const { data } = await api.post<RegisterResponse>("/api/v1/auth/register", {
       email,
       password,
       full_name,
+    });
+    return data;
+  },
+
+  async verifyEmail(email: string, code: string): Promise<AuthResponse> {
+    const { data } = await api.post<AuthResponse>("/api/v1/auth/verify-email", {
+      email,
+      code,
+    });
+    return data;
+  },
+
+  async resendCode(email: string): Promise<{ message: string }> {
+    const { data } = await api.post<{ message: string }>("/api/v1/auth/resend-code", {
+      email,
     });
     return data;
   },
@@ -120,7 +140,6 @@ export interface ConsultationResponse {
   resumen: string;
   nivel_atencion: string;
   recomendacion: string;
-  advertencia: string;
 }
 
 export interface ConsultationHistoryItem {
@@ -136,7 +155,6 @@ export interface ConsultationHistoryItem {
   resumen: string;
   nivel_atencion: string;
   recomendacion: string;
-  advertencia: string;
   created_at: string;
 }
 
@@ -151,14 +169,12 @@ export interface ExtractedValue {
 export interface LabExamResponse {
   extracted_values: ExtractedValue[];
   plain_language_summary: string;
-  medical_warning: string;
 }
 
 export interface LabExamHistoryItem {
   id: number;
   extracted_values: ExtractedValue[];
   plain_language_summary: string;
-  medical_warning: string;
   created_at: string;
 }
 
@@ -171,8 +187,8 @@ export const medicalApi = {
     return result;
   },
 
-  async getConsultations(): Promise<any[]> {
-    const { data } = await api.get<any[]>("/api/v1/medical/consultations");
+  async getConsultations(): Promise<ConsultationHistoryItem[]> {
+    const { data } = await api.get<ConsultationHistoryItem[]>("/api/v1/medical/consultations");
     return data;
   },
 };

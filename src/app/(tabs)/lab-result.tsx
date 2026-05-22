@@ -29,7 +29,7 @@ export default function LabResultScreen() {
       </View>
 
       {/* Warning Banner */}
-      {warning && (
+      {!!warning && (
         <View style={styles.warningBanner}>
           <Text style={styles.warningIcon}>⚠️</Text>
           <Text style={styles.warningText}>{warning}</Text>
@@ -88,7 +88,7 @@ export default function LabResultScreen() {
       )}
 
       {/* Summary */}
-      {summary && (
+      {!!summary && (
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardIcon}>📝</Text>

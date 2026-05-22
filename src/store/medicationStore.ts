@@ -104,21 +104,22 @@ export const useMedicationStore = create<MedicationState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const medications = get().medications;
-      const updated = medications.map(async (m) => {
-        if (m.id !== id) return m;
+      const medication = medications.find((m) => m.id === id);
+      if (!medication) return;
 
-        if (m.isActive) {
-          await cancelMedicationNotifications(m.notificationIds);
-          return { ...m, isActive: false, notificationIds: [] };
-        } else {
-          const notificationIds = await scheduleMedicationNotifications(m);
-          return { ...m, isActive: true, notificationIds };
-        }
-      });
+      let updatedMedication: Medication;
 
-      const resolved = await Promise.all(updated);
-      await saveMedicationsToStorage(resolved);
-      set({ medications: resolved });
+      if (medication.isActive) {
+        await cancelMedicationNotifications(medication.notificationIds);
+        updatedMedication = { ...medication, isActive: false, notificationIds: [] };
+      } else {
+        const notificationIds = await scheduleMedicationNotifications(medication);
+        updatedMedication = { ...medication, isActive: true, notificationIds };
+      }
+
+      const updated = medications.map((m) => m.id === id ? updatedMedication : m);
+      await saveMedicationsToStorage(updated);
+      set({ medications: updated });
     } catch (err: any) {
       set({ error: err.message || "Error al cambiar estado" });
     } finally {
