@@ -15,6 +15,7 @@ interface AuthState {
   resendCode: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   restoreSession: () => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
   clearError: () => void;
 }
@@ -100,6 +101,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: false });
     } catch (err: any) {
       const message = err.response?.data?.detail || "Error al reenviar codigo";
+      set({ error: message, isLoading: false });
+      throw new Error(message);
+    }
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      await authApi.changePassword(currentPassword, newPassword);
+      set({ isLoading: false });
+    } catch (err: any) {
+      const message = err.response?.data?.detail || "Error al cambiar la contrasena";
       set({ error: message, isLoading: false });
       throw new Error(message);
     }

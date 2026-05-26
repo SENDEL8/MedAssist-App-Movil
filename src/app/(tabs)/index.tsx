@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView, StatusBar, Modal, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Pressable, StyleSheet, ActivityIndicator, ScrollView, StatusBar, Modal, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "@/store/authStore";
 
@@ -7,6 +7,10 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user, token, logout, isRestored } = useAuthStore();
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [cpError, setCpError] = useState("");
 
   useEffect(() => {
     if (isRestored && !token) {
@@ -16,16 +20,23 @@ export default function HomeScreen() {
 
   const handleLogout = async () => {
     setShowProfileModal(false);
-    await logout();
     router.replace("/(auth)/login");
+    try { await logout(); } catch {}
   };
 
-  const confirmLogout = () => {
-    setShowProfileModal(false);
-    Alert.alert("Cerrar sesión", "¿Estás seguro de que querés cerrar sesión?", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Cerrar sesión", style: "destructive", onPress: handleLogout },
-    ]);
+  const handleChangePassword = async () => {
+    setCpError("");
+    if (!currentPassword) { setCpError("Ingresa tu contraseña actual"); return; }
+    if (!newPassword || newPassword.length < 8) { setCpError("La nueva contraseña debe tener al menos 8 caracteres"); return; }
+    try {
+      await useAuthStore.getState().changePassword(currentPassword, newPassword);
+      setShowChangePassword(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      Alert.alert("Contraseña actualizada", "Tu contraseña se cambió correctamente.");
+    } catch (err: any) {
+      setCpError(err.message);
+    }
   };
 
   if (!isRestored) {
@@ -36,8 +47,12 @@ export default function HomeScreen() {
     );
   }
 
-  if (!token || !user) {
-    return null;
+  if (!user) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#16a34a" />
+      </View>
+    );
   }
 
   const getGreeting = () => {
@@ -176,8 +191,17 @@ export default function HomeScreen() {
             <View style={styles.profileDivider} />
 
             <TouchableOpacity
+              style={styles.changePwOption}
+              onPress={() => { setShowProfileModal(false); setShowChangePassword(true); }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.changePwIcon}>🔑</Text>
+              <Text style={styles.changePwLabel}>Cambiar contraseña</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
               style={styles.logoutOption}
-              onPress={confirmLogout}
+              onPress={handleLogout}
               activeOpacity={0.7}
             >
               <Text style={styles.logoutIcon}>🚪</Text>
@@ -185,6 +209,63 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
+      </Modal>
+
+      {/* Change Password Modal */}
+      <Modal
+        visible={showChangePassword}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setShowChangePassword(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowChangePassword(false)}>
+          <Pressable onPress={() => {}}>
+            <View style={styles.changePwCard}>
+              <Text style={styles.changePwTitle}>Cambiar contraseña</Text>
+
+              {cpError ? (
+                <View style={styles.cpErrorBox}>
+                  <Text style={styles.cpErrorText}>{cpError}</Text>
+                </View>
+              ) : null}
+
+              <Text style={styles.fieldLabel}>Contraseña actual</Text>
+              <TextInput
+                style={styles.fieldInput}
+                placeholder="Ingresa tu contraseña actual"
+                placeholderTextColor="#9ca3af"
+                secureTextEntry
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+              />
+
+              <Text style={styles.fieldLabel}>Nueva contraseña</Text>
+              <TextInput
+                style={styles.fieldInput}
+                placeholder="Ingresa la nueva contraseña"
+                placeholderTextColor="#9ca3af"
+                secureTextEntry
+                value={newPassword}
+                onChangeText={setNewPassword}
+              />
+
+              <TouchableOpacity
+                style={styles.changePwButton}
+                onPress={handleChangePassword}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.changePwButtonText}>Actualizar contraseña</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.changePwCancel}
+                onPress={() => { setShowChangePassword(false); setCpError(""); setCurrentPassword(""); setNewPassword(""); }}
+              >
+                <Text style={styles.changePwCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
       </Modal>
     </View>
   );
@@ -321,4 +402,60 @@ const styles = StyleSheet.create({
   },
   logoutIcon: { fontSize: 20, marginRight: 12 },
   logoutLabel: { fontSize: 16, fontWeight: "600", color: "#dc2626" },
+
+  changePwOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f0fdf4",
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    width: "100%",
+    marginBottom: 10,
+  },
+  changePwIcon: { fontSize: 20, marginRight: 12 },
+  changePwLabel: { fontSize: 16, fontWeight: "600", color: "#15803d" },
+
+  changePwCard: {
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    padding: 28,
+    width: "85%",
+    maxWidth: 340,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  changePwTitle: { fontSize: 20, fontWeight: "700", color: "#1f2937", textAlign: "center", marginBottom: 20 },
+  cpErrorBox: { backgroundColor: "#fef2f2", borderRadius: 12, padding: 12, marginBottom: 16 },
+  cpErrorText: { color: "#dc2626", fontSize: 14, textAlign: "center" },
+  fieldLabel: { fontSize: 14, fontWeight: "600", color: "#374151", marginBottom: 6 },
+  fieldInput: {
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: "#1f2937",
+    backgroundColor: "#f9fafb",
+    marginBottom: 16,
+  },
+  changePwButton: {
+    backgroundColor: "#16a34a",
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginTop: 4,
+    shadowColor: "#16a34a",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  changePwButtonText: { color: "#fff", fontWeight: "bold", fontSize: 17 },
+  changePwCancel: { marginTop: 16, alignItems: "center" },
+  changePwCancelText: { color: "#6b7280", fontSize: 15 },
 });
