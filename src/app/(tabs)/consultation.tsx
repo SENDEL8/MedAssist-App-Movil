@@ -59,7 +59,7 @@ export default function ConsultationScreen() {
       const dia = parseInt(diastolicBp, 10);
       if (isNaN(dia) || dia < 40 || dia > 160) newErrors.diastolicBp = "Rango: 40-160";
     }
-    if (selectedSymptoms.length === 0) newErrors.symptoms = "Selecciona al menos un sintoma";
+    if (selectedSymptoms.length === 0 && !description.trim()) newErrors.symptoms = "Selecciona sintomas o describe como te sentis";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -210,7 +210,7 @@ export default function ConsultationScreen() {
             <Text style={styles.cardIcon}>🤒</Text>
             <Text style={styles.cardTitle}>Sintomas</Text>
           </View>
-          <Text style={styles.subLabel}>Selecciona todos los que apliquen *</Text>
+          <Text style={styles.subLabel}>Opcional. Selecciona los que apliquen, o conta en la descripcion</Text>
           <View style={styles.chipsContainer}>
             {SYMPTOMS_LIST.map((s) => {
               const isActive = selectedSymptoms.includes(s);

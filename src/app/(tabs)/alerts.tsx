@@ -14,7 +14,7 @@ import {
   Pressable,
 } from "react-native";
 import { useMedicationStore } from "@/store/medicationStore";
-import { Medication } from "@/services/notificationService";
+import { Medication, SOUND_OPTIONS, SoundOption } from "@/services/notificationService";
 import Constants from "expo-constants";
 
 const isExpoGo = Constants.appOwnership === "expo";
@@ -27,20 +27,58 @@ const FREQUENCY_OPTIONS = [
   { label: "Cada 24 horas", value: 24 },
 ];
 
+const SOUND_LABELS: Record<SoundOption, string> = {
+  default: "Por defecto",
+  notification: "Notificación",
+  alarm: "Alarma",
+  reminder: "Recordatorio",
+  urgent: "Urgente",
+};
+
 export default function AlertsScreen() {
-  const { medications, isLoading, error, permissionGranted, loadMedications, addMedication, removeMedication, toggleMedication, clearError } = useMedicationStore();
+  const {
+    medications, isLoading, error, permissionGranted, globalSoundName,
+    loadMedications, addMedication, updateMedication, removeMedication,
+    toggleMedication, setGlobalSound, clearError,
+  } = useMedicationStore();
+
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [dosage, setDosage] = useState("");
   const [frequencyHours, setFrequencyHours] = useState(8);
   const [startTime, setStartTime] = useState("08:00");
+  const [soundName, setSoundName] = useState<SoundOption>("default");
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showSoundPicker, setShowSoundPicker] = useState(false);
   const [tempTime, setTempTime] = useState("08:00");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     loadMedications();
   }, []);
+
+  const openAddForm = () => {
+    setEditingId(null);
+    setName("");
+    setDosage("");
+    setFrequencyHours(8);
+    setStartTime("08:00");
+    setSoundName(globalSoundName);
+    setFormErrors({});
+    setShowForm(true);
+  };
+
+  const openEditForm = (med: Medication) => {
+    setEditingId(med.id);
+    setName(med.name);
+    setDosage(med.dosage);
+    setFrequencyHours(med.frequencyHours);
+    setStartTime(med.startTime);
+    setSoundName(med.soundName || globalSoundName);
+    setFormErrors({});
+    setShowForm(true);
+  };
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
@@ -50,22 +88,31 @@ export default function AlertsScreen() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleAdd = async () => {
+  const handleSave = async () => {
     if (!validateForm()) return;
 
-    await addMedication({
+    const data = {
       name: name.trim(),
       dosage: dosage.trim(),
       frequencyHours,
       startTime,
-    });
+      soundName,
+    };
+
+    if (editingId) {
+      await updateMedication(editingId, data);
+    } else {
+      await addMedication(data);
+    }
 
     if (!useMedicationStore.getState().error) {
+      setShowForm(false);
+      setEditingId(null);
       setName("");
       setDosage("");
       setFrequencyHours(8);
       setStartTime("08:00");
-      setShowForm(false);
+      setSoundName("default");
       setFormErrors({});
     }
   };
@@ -87,6 +134,11 @@ export default function AlertsScreen() {
 
   const handleToggle = (id: string) => {
     toggleMedication(id);
+  };
+
+  const handleSoundSelect = (sound: SoundOption) => {
+    setSoundName(sound);
+    setShowSoundPicker(false);
   };
 
   const formatTimeDisplay = (time: string) => {
@@ -111,8 +163,20 @@ export default function AlertsScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Alertas de Medicamentos</Text>
-        <Text style={styles.headerSub}>Programa tus recordatorios</Text>
+        <View style={styles.headerRow}>
+          <View style={styles.headerTextBlock}>
+            <Text style={styles.headerTitle}>Alertas de Medicamentos</Text>
+            <Text style={styles.headerSub}>Programa tus recordatorios</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.soundHeaderBtn}
+            onPress={() => setShowSoundPicker(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.soundHeaderIcon}>🔔</Text>
+            <Text style={styles.soundHeaderLabel}>{SOUND_LABELS[globalSoundName]}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {isExpoGo ? (
@@ -166,15 +230,32 @@ export default function AlertsScreen() {
                       {formatTimeDisplay(med.startTime)} - Cada {med.frequencyHours}h
                     </Text>
                   </View>
+                  {med.soundName && med.soundName !== "default" && (
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailIcon}>🔔</Text>
+                      <Text style={styles.detailText}>
+                        {SOUND_LABELS[med.soundName]}
+                      </Text>
+                    </View>
+                  )}
                 </View>
 
-                <TouchableOpacity
-                  style={styles.deleteBtn}
-                  onPress={() => handleRemove(med)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.deleteText}>Eliminar</Text>
-                </TouchableOpacity>
+                <View style={styles.cardActions}>
+                  <TouchableOpacity
+                    style={styles.editBtn}
+                    onPress={() => openEditForm(med)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.editText}>Editar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.deleteBtn}
+                    onPress={() => handleRemove(med)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.deleteText}>Eliminar</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             ))}
           </>
@@ -194,14 +275,14 @@ export default function AlertsScreen() {
         {/* Boton agregar */}
         <TouchableOpacity
           style={styles.addButton}
-          onPress={() => setShowForm(true)}
+          onPress={openAddForm}
           activeOpacity={0.85}
         >
           <Text style={styles.addButtonText}>+ Agregar Medicamento</Text>
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Modal formulario */}
+      {/* Modal formulario (add / edit) */}
       <Modal
         visible={showForm}
         animationType="slide"
@@ -211,7 +292,9 @@ export default function AlertsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Nuevo Medicamento</Text>
+              <Text style={styles.modalTitle}>
+                {editingId ? "Editar Medicamento" : "Nuevo Medicamento"}
+              </Text>
               <TouchableOpacity
                 onPress={() => { setShowForm(false); setFormErrors({}); }}
                 style={styles.closeBtn}
@@ -276,6 +359,20 @@ export default function AlertsScreen() {
                 </TouchableOpacity>
               </View>
 
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Sonido de la alerta</Text>
+                <TouchableOpacity
+                  style={styles.soundPickerBtn}
+                  onPress={() => setShowSoundPicker(true)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.soundPickerText}>
+                    {SOUND_LABELS[soundName]}
+                  </Text>
+                  <Text style={styles.soundPickerIcon}>🔔</Text>
+                </TouchableOpacity>
+              </View>
+
               {error && (
                 <View style={styles.errorBanner}>
                   <Text style={styles.errorText}>{error}</Text>
@@ -284,7 +381,7 @@ export default function AlertsScreen() {
 
               <TouchableOpacity
                 style={[styles.submitBtn, isLoading && styles.submitBtnDisabled]}
-                onPress={handleAdd}
+                onPress={handleSave}
                 disabled={isLoading}
                 activeOpacity={0.85}
               >
@@ -294,7 +391,9 @@ export default function AlertsScreen() {
                     <Text style={styles.submitText}>Guardando...</Text>
                   </View>
                 ) : (
-                  <Text style={styles.submitText}>Programar Alertas</Text>
+                  <Text style={styles.submitText}>
+                    {editingId ? "Guardar Cambios" : "Programar Alertas"}
+                  </Text>
                 )}
               </TouchableOpacity>
             </ScrollView>
@@ -372,6 +471,61 @@ export default function AlertsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Sound Picker Modal (global o por medicamento) */}
+      <Modal
+        visible={showSoundPicker}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setShowSoundPicker(false)}
+      >
+        <View style={styles.pickerOverlay}>
+          <View style={styles.soundPickerModalContent}>
+            <Text style={styles.pickerTitle}>Sonido de alerta</Text>
+            <Text style={styles.soundPickerSub}>
+              {editingId || showForm
+                ? "Solo para este medicamento"
+                : "Sonido global para todas las alertas"}
+            </Text>
+
+            <View style={styles.soundOptionsList}>
+              {SOUND_OPTIONS.map((opt) => {
+                const isSelected = showForm ? soundName === opt.value : globalSoundName === opt.value;
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.soundOptionItem, isSelected && styles.soundOptionItemSelected]}
+                    onPress={() => {
+                      if (showForm) {
+                        handleSoundSelect(opt.value);
+                      } else {
+                        setGlobalSound(opt.value);
+                        setShowSoundPicker(false);
+                      }
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.soundOptionInfo}>
+                      <Text style={[styles.soundOptionLabel, isSelected && styles.soundOptionLabelSelected]}>
+                        {opt.label}
+                      </Text>
+                      <Text style={styles.soundOptionDesc}>{opt.description}</Text>
+                    </View>
+                    {isSelected && <Text style={styles.checkMark}>✓</Text>}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <TouchableOpacity
+              style={styles.pickerConfirmBtn}
+              onPress={() => setShowSoundPicker(false)}
+            >
+              <Text style={styles.pickerConfirmText}>Cerrar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -382,8 +536,14 @@ const styles = StyleSheet.create({
   loadingText: { marginTop: 12, fontSize: 16, color: "#6b7280" },
 
   header: { backgroundColor: "#15803d", paddingTop: 50, paddingBottom: 24, paddingHorizontal: 24 },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  headerTextBlock: { flex: 1 },
   headerTitle: { fontSize: 24, fontWeight: "bold", color: "#fff" },
   headerSub: { fontSize: 15, color: "#bbf7d0", marginTop: 4 },
+
+  soundHeaderBtn: { alignItems: "center", paddingHorizontal: 12, paddingVertical: 6, backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 10 },
+  soundHeaderIcon: { fontSize: 18 },
+  soundHeaderLabel: { fontSize: 11, color: "#bbf7d0", marginTop: 2, fontWeight: "500" },
 
   warningBanner: { backgroundColor: "#fef3c7", padding: 12, marginHorizontal: 18, marginTop: 12, borderRadius: 8 },
   warningText: { fontSize: 13, color: "#92400e", textAlign: "center" },
@@ -411,22 +571,20 @@ const styles = StyleSheet.create({
   medName: { fontSize: 18, fontWeight: "600", color: "#1f2937" },
   medDosage: { fontSize: 14, color: "#6b7280", marginTop: 2 },
 
-  toggleBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: "#e5e7eb",
-  },
+  toggleBtn: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, backgroundColor: "#e5e7eb" },
   toggleBtnActive: { backgroundColor: "#16a34a" },
   toggleText: { fontSize: 12, fontWeight: "700", color: "#6b7280" },
   toggleTextActive: { color: "#fff" },
 
   medDetails: { marginBottom: 12 },
-  detailItem: { flexDirection: "row", alignItems: "center" },
+  detailItem: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
   detailIcon: { fontSize: 16, marginRight: 8 },
   detailText: { fontSize: 14, color: "#4b5563" },
 
-  deleteBtn: { alignSelf: "flex-end", paddingVertical: 6, paddingHorizontal: 12 },
+  cardActions: { flexDirection: "row", justifyContent: "flex-end", gap: 8, borderTopWidth: 1, borderTopColor: "#f3f4f6", paddingTop: 12 },
+  editBtn: { paddingVertical: 6, paddingHorizontal: 12 },
+  editText: { fontSize: 13, color: "#2563eb", fontWeight: "500" },
+  deleteBtn: { paddingVertical: 6, paddingHorizontal: 12 },
   deleteText: { fontSize: 13, color: "#ef4444", fontWeight: "500" },
 
   emptyState: { alignItems: "center", paddingVertical: 40 },
@@ -502,6 +660,41 @@ const styles = StyleSheet.create({
   },
   timePickerText: { fontSize: 18, fontWeight: "600", color: "#1f2937" },
   timePickerIcon: { fontSize: 22 },
+
+  soundPickerBtn: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    backgroundColor: "#f9fafb",
+  },
+  soundPickerText: { fontSize: 16, fontWeight: "500", color: "#1f2937" },
+  soundPickerIcon: { fontSize: 18 },
+
+  soundPickerModalContent: { backgroundColor: "#fff", borderRadius: 20, padding: 20, width: "85%", maxWidth: 340 },
+  soundPickerSub: { fontSize: 13, color: "#6b7280", textAlign: "center", marginBottom: 16, marginTop: -8 },
+  soundOptionsList: { gap: 8, marginBottom: 16 },
+  soundOptionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: "#f9fafb",
+  },
+  soundOptionItemSelected: { borderColor: "#16a34a", backgroundColor: "#dcfce7" },
+  soundOptionInfo: { flex: 1 },
+  soundOptionLabel: { fontSize: 15, fontWeight: "600", color: "#374151" },
+  soundOptionLabelSelected: { color: "#15803d" },
+  soundOptionDesc: { fontSize: 12, color: "#6b7280", marginTop: 2 },
+  checkMark: { fontSize: 18, color: "#16a34a", fontWeight: "700" },
 
   errorBanner: { backgroundColor: "#fef2f2", padding: 12, borderRadius: 8, marginBottom: 16 },
   errorText: { fontSize: 13, color: "#dc2626", textAlign: "center" },

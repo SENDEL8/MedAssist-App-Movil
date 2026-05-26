@@ -27,9 +27,7 @@
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.POST_NOTIFICATIONS",
-        "android.permission.SCHEDULE_EXACT_ALARM",
-        "android.permission.RECEIVE_BOOT_COMPLETED"
+        "android.permission.USE_EXACT_ALARM"
       ],
       "package": "com.anonymous.mobile"
     },
@@ -55,14 +53,15 @@
           "icon": "./assets/images/icon.png",
           "color": "#16a34a"
         }
-      ]
+      ],
+      "./plugins/withMedassistSounds"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
     "extra": {
-      "API_URL": "http://192.168.0.199:8000",
+      "API_URL": "http://192.168.0.198:8000",
       "router": {},
       "eas": {
         "projectId": "31d3666b-c65a-4e93-a84f-8fa9996005ac"

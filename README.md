@@ -72,6 +72,12 @@ pnpm run android
 
 ```
 mobile/
+├── assets/
+│   └── sounds/                    # Tonos de notificación (WAV)
+├── scripts/
+│   └── generate-sounds.js         # Generador de archivos WAV
+├── plugins/
+│   └── withMedassistSounds.js     # Config plugin Expo (copia sonidos a res/raw)
 ├── src/
 │   ├── app/
 │   │   ├── _layout.tsx               # Root layout
@@ -179,6 +185,14 @@ mobile/
 - Tamano maximo: 10 MB
 - Proteccion contra path traversal
 
+## Funcionalidades recien agregadas
+
+- [x] Editar medicamentos directamente desde la lista
+- [x] Sonido personalizado por medicamento (5 tonos reales: notificación, alarma, recordatorio, urgente)
+- [x] Re-agendado automatico al abrir la app (notificaciones sobreviven reinicios del dispositivo)
+- [x] Notificaciones con tiempo exacto en Android (SET_EXACT_AND_ALLOW_WHILE_IDLE + ajuste de latencia)
+- [x] Reschedule al editar un medicamento (cancela viejas y programa nuevas)
+
 ## Alertas de Medicamentos
 
 ### Funcionalidad
@@ -191,10 +205,22 @@ mobile/
 ### Frecuencias disponibles
 - Cada 4, 6, 8, 12 o 24 horas
 
+### Sonidos personalizados
+
+Se incluyen 5 tonos WAV generados en `assets/sounds/`:
+- `med_notification.wav` — 440 Hz, suave
+- `med_alarm.wav` — 880 Hz con vibración, intenso
+- `med_reminder.wav` — 330 Hz, corto
+- `med_urgent.wav` — 660 Hz con vibrato
+- **Por defecto** — usa el sonido de notificación del sistema Android
+
+Los sonidos se copian a `android/app/src/main/res/raw/` mediante el plugin `plugins/withMedassistSounds.js` durante el prebuild (`npx expo prebuild` o `eas build`).
+
 ### Notas importantes
 - Las notificaciones usan `DAILY` trigger con una notificacion por dosis
 - En Android se requiere un canal de notificaciones dedicado (`medication-alerts`)
 - En Expo Go las notificaciones no funcionan (limitacion de SDK 53+)
+- **Si cambias un tono en `assets/sounds/`, necesitas re-ejecutar `npx expo run:android` para que el plugin copie los nuevos archivos**
 
 ## Historial Unificado
 
@@ -255,7 +281,4 @@ Esperado desde SDK 53. Usa `npx expo run:android` para un development build.
 ## Proximos pasos
 
 - [ ] Modo oscuro
-- [ ] Editar medicamentos existentes
-- [ ] Sonido personalizado para alertas
-- [ ] Soporte offline (queue de requests)
 - [ ] Guardar imagen subida en examenes de laboratorio
