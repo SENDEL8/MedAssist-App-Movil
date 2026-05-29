@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
 
 export default function VerifyEmailScreen() {
@@ -103,12 +104,12 @@ export default function VerifyEmailScreen() {
             ))}
           </View>
 
-          {error ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorIcon}>⚠️</Text>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          ) : null}
+           {error ? (
+             <View style={styles.errorBox}>
+               <Ionicons name="alert-circle" size={20} color="#dc2626" />
+               <Text style={styles.errorText}>{error}</Text>
+             </View>
+           ) : null}
 
           <TouchableOpacity
             style={[styles.button, (!isComplete || isLoading) && styles.buttonDisabled]}
@@ -175,8 +176,7 @@ const styles = StyleSheet.create({
   codeInputFilled: { borderColor: "#16a34a", backgroundColor: "#f0fdf4" },
 
   errorBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#fef2f2", borderRadius: 12, padding: 14, marginBottom: 20, width: "100%" },
-  errorIcon: { fontSize: 18, marginRight: 10 },
-  errorText: { flex: 1, color: "#dc2626", fontSize: 14 },
+  errorText: { flex: 1, color: "#dc2626", fontSize: 14, marginLeft: 10 },
 
   button: { backgroundColor: "#16a34a", borderRadius: 14, paddingVertical: 16, alignItems: "center", width: "100%", shadowColor: "#16a34a", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 6, elevation: 3 },
   buttonDisabled: { opacity: 0.6 },

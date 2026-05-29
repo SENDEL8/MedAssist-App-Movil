@@ -11,6 +11,7 @@ import {
   StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { medicalApi, labsApi } from "@/services/api";
 import type { ConsultationHistoryItem, LabExamHistoryItem, PageResponse } from "@/services/api";
 
@@ -99,12 +100,12 @@ export default function HistoryScreen() {
   };
 
   const getLevelStyle = (level: string) => {
-    const lower = level.toLowerCase();
-    if (lower.includes("urgente") || lower.includes("emergencia"))
-      return { bg: "#fef2f2", border: "#fca5a5", text: "#dc2626", dot: "#ef4444" };
-    if (lower.includes("evaluacion") || lower.includes("moderada"))
-      return { bg: "#fffbeb", border: "#fde68a", text: "#d97706", dot: "#f59e0b" };
-    return { bg: "#f0fdf4", border: "#bbf7d0", text: "#16a34a", dot: "#22c55e" };
+    const normalized = level.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    if (normalized.includes("urgente"))
+      return { bg: "#fef2f2", border: "#fecaca", text: "#dc2626", dot: "#ef4444", icon: "warning", iconColor: "#dc2626" };
+    if (normalized.includes("evaluacion"))
+      return { bg: "#fffbeb", border: "#fde68a", text: "#d97706", dot: "#f59e0b", icon: "alert-circle", iconColor: "#d97706" };
+    return { bg: "#f0fdf4", border: "#bbf7d0", text: "#16a34a", dot: "#22c55e", icon: "checkmark-circle", iconColor: "#16a34a" };
   };
 
   const handleConsultationPress = (item: ConsultationHistoryItem) => {
@@ -179,7 +180,7 @@ export default function HistoryScreen() {
       >
         {items.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>{activeTab === "consultas" ? "📭" : "🔬"}</Text>
+            <Ionicons name={activeTab === "consultas" ? "document-text-outline" : "flask-outline"} size={72} color="#cbd5e1" />
             <Text style={styles.emptyText}>
               No tienes {activeTab} todavia
             </Text>
@@ -205,24 +206,24 @@ export default function HistoryScreen() {
                     onPress={() => handleConsultationPress(c)}
                     activeOpacity={0.7}
                   >
-                    <View style={styles.cardTop}>
+                      <View style={styles.cardTop}>
                       <View style={styles.dateRow}>
-                        <Text style={styles.dateIcon}>📅</Text>
+                        <Ionicons name="calendar-outline" size={14} color="#64748b" />
                         <Text style={styles.date}>{formatDate(c.created_at)}</Text>
                       </View>
                       <View style={[styles.levelBadge, { backgroundColor: ls.bg, borderColor: ls.border }]}>
-                        <View style={[styles.levelDot, { backgroundColor: ls.dot }]} />
+                        <Ionicons name={ls.icon as any} size={16} color={ls.iconColor} style={{ marginRight: 6 }} />
                         <Text style={[styles.levelText, { color: ls.text }]}>{c.nivel_atencion}</Text>
                       </View>
                     </View>
                     <View style={styles.symptomsRow}>
-                      <Text style={styles.symptomsIcon}>🤒</Text>
+                      <Ionicons name="fitness" size={15} color="#64748b" />
                       <Text style={styles.symptoms} numberOfLines={2}>{c.symptoms}</Text>
                     </View>
                     <Text style={styles.summary} numberOfLines={2}>{c.resumen}</Text>
                     <View style={styles.cardFooter}>
                       <Text style={styles.tapHint}>Toca para ver detalles</Text>
-                      <Text style={styles.arrow}>›</Text>
+                      <Ionicons name="chevron-forward" size={22} color="#cbd5e1" />
                     </View>
                   </TouchableOpacity>
                 );
@@ -250,7 +251,7 @@ export default function HistoryScreen() {
                     )}
                   </View>
                   <View style={styles.symptomsRow}>
-                    <Text style={styles.symptomsIcon}>🔬</Text>
+                    <Ionicons name="flask" size={15} color="#64748b" />
                     <Text style={styles.symptoms} numberOfLines={2}>
                       {e.extracted_values.length} valor(es) analizado(s)
                     </Text>
@@ -258,7 +259,7 @@ export default function HistoryScreen() {
                   <Text style={styles.summary} numberOfLines={2}>{e.plain_language_summary}</Text>
                   <View style={styles.cardFooter}>
                     <Text style={styles.tapHint}>Toca para ver detalles</Text>
-                    <Text style={styles.arrow}>›</Text>
+                    <Ionicons name="chevron-forward" size={22} color="#cbd5e1" />
                   </View>
                 </TouchableOpacity>
               );
@@ -289,96 +290,104 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#f8fafc" },
+  root: { flex: 1, backgroundColor: "#f1f5f9" },
   loadingContainer: { flex: 1, backgroundColor: "#fff", alignItems: "center", justifyContent: "center" },
 
-  /* Header */
-  header: { backgroundColor: "#15803d", paddingTop: 50, paddingBottom: 24, paddingHorizontal: 24 },
+  /* Header - Enhanced */
+  header: { backgroundColor: "#15803d", paddingTop: 50, paddingBottom: 24, paddingHorizontal: 24, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
   headerTitle: { fontSize: 28, fontWeight: "bold", color: "#fff" },
-  headerSub: { fontSize: 15, color: "#bbf7d0", marginTop: 4 },
+  headerSub: { fontSize: 14, color: "#bbf7d0", marginTop: 6 },
 
-  /* Tabs */
-  tabContainer: { flexDirection: "row", paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
+  /* Tabs - Enhanced */
+  tabContainer: { flexDirection: "row", paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 },
   tab: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    marginRight: 10,
-    backgroundColor: "#f3f4f6",
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 14,
+    marginHorizontal: 4,
+    backgroundColor: "#e2e8f0",
+    alignItems: "center",
   },
   tabActive: { backgroundColor: "#dcfce7" },
-  tabText: { fontSize: 14, fontWeight: "600", color: "#6b7280" },
-  tabTextActive: { color: "#15803d" },
+  tabText: { fontSize: 14, fontWeight: "600", color: "#64748b" },
+  tabTextActive: { color: "#15803d", fontWeight: "700" },
 
   /* Body */
   body: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 32 },
+  scrollContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32 },
 
-  /* Card */
+  /* Card - Enhanced */
   card: {
     backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 14,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
-  cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
+  cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
   dateRow: { flexDirection: "row", alignItems: "center" },
-  dateIcon: { fontSize: 14, marginRight: 6 },
-  date: { fontSize: 13, color: "#6b7280" },
+  dateIcon: { marginRight: 6 },
+  date: { fontSize: 13, color: "#64748b", fontWeight: "500" },
   levelBadge: {
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1.5,
   },
-  levelDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
-  levelText: { fontSize: 12, fontWeight: "600" },
-  symptomsRow: { flexDirection: "row", alignItems: "flex-start" },
-  symptomsIcon: { fontSize: 14, marginRight: 8, marginTop: 1 },
-  symptoms: { fontSize: 15, color: "#1f2937", fontWeight: "500", flex: 1 },
-  summary: { fontSize: 13, color: "#6b7280", marginTop: 8, lineHeight: 18 },
+  levelDot: { width: 10, height: 10, borderRadius: 5, marginRight: 8 },
+  levelText: { fontSize: 12, fontWeight: "700" },
+  symptomsRow: { flexDirection: "row", alignItems: "flex-start", marginTop: 4 },
+  symptomsIcon: { marginRight: 8, marginTop: 2 },
+  symptoms: { fontSize: 15, color: "#1e293b", fontWeight: "500", flex: 1, lineHeight: 22 },
+  summary: { fontSize: 14, color: "#64748b", marginTop: 10, lineHeight: 20 },
   cardFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 12,
-    paddingTop: 10,
+    marginTop: 14,
+    paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#f3f4f6",
+    borderTopColor: "#f1f5f9",
   },
-  tapHint: { fontSize: 12, color: "#9ca3af" },
-  arrow: { fontSize: 20, color: "#d1d5db" },
+  tapHint: { fontSize: 12, color: "#94a3b8" },
+  arrow: { fontSize: 22, color: "#cbd5e1" },
 
-  /* Load More */
+  /* Load More - Enhanced */
   loadMoreBtn: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 16,
-    marginTop: 4,
-    backgroundColor: "#f0fdf4",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#bbf7d0",
+    paddingVertical: 18,
+    marginTop: 8,
+    backgroundColor: "#dcfce7",
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#86efac",
   },
-  loadMoreText: { color: "#15803d", fontWeight: "600", fontSize: 15 },
+  loadMoreText: { color: "#15803d", fontWeight: "700", fontSize: 15 },
 
-  /* Empty state */
-  emptyContainer: { alignItems: "center", paddingTop: 60 },
-  emptyIcon: { fontSize: 64, marginBottom: 16 },
-  emptyText: { fontSize: 16, color: "#6b7280", textAlign: "center" },
+  /* Empty state - Enhanced */
+  emptyContainer: { alignItems: "center", paddingTop: 80 },
+  emptyIcon: { fontSize: 72, marginBottom: 20 },
+  emptyText: { fontSize: 17, color: "#64748b", textAlign: "center", marginBottom: 8 },
   emptyButton: {
     backgroundColor: "#16a34a",
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    marginTop: 20,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    marginTop: 24,
+    shadowColor: "#16a34a",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   emptyButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
 });

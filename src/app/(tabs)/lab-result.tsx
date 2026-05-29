@@ -1,5 +1,6 @@
 import { View, Text, ScrollView, StyleSheet, StatusBar, TouchableOpacity } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { ExtractedValue } from "@/services/api";
 
 export default function LabResultScreen() {
@@ -31,7 +32,7 @@ export default function LabResultScreen() {
       {/* Warning Banner */}
       {!!warning && (
         <View style={styles.warningBanner}>
-          <Text style={styles.warningIcon}>⚠️</Text>
+          <Ionicons name="warning" size={20} color="#92400e" />
           <Text style={styles.warningText}>{warning}</Text>
         </View>
       )}
@@ -52,7 +53,7 @@ export default function LabResultScreen() {
       {extractedValues.length > 0 && (
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardIcon}>🔬</Text>
+            <Ionicons name="flask" size={24} color="#9333ea" />
             <Text style={styles.cardTitle}>Valores Extraidos</Text>
           </View>
           {extractedValues.map((item, index) => (
@@ -91,7 +92,7 @@ export default function LabResultScreen() {
       {!!summary && (
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardIcon}>📝</Text>
+            <Ionicons name="document-text" size={24} color="#15803d" />
             <Text style={styles.cardTitle}>Explicacion</Text>
           </View>
           <Text style={styles.summaryText}>{summary}</Text>
@@ -100,7 +101,7 @@ export default function LabResultScreen() {
 
       {/* Disclaimer Card - Always visible */}
       <View style={styles.disclaimerCard}>
-        <Text style={styles.disclaimerIcon}>🏥</Text>
+        <Ionicons name="medkit" size={18} color="#166534" />
         <Text style={styles.disclaimerText}>
           Este analisis es solo orientativo y no reemplaza un diagnostico medico profesional.
           Ante cualquier duda o resultado fuera de rango, consulta con un profesional de salud.
@@ -120,109 +121,108 @@ export default function LabResultScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#f8fafc" },
-  scrollContent: { paddingHorizontal: 18, paddingTop: 20, paddingBottom: 32 },
+  root: { flex: 1, backgroundColor: "#f1f5f9" },
+  scrollContent: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 32 },
 
-  /* Header */
-  header: { backgroundColor: "#15803d", paddingTop: 50, paddingBottom: 24, paddingHorizontal: 24, borderRadius: 16, marginBottom: 16 },
-  headerTitle: { fontSize: 24, fontWeight: "bold", color: "#fff" },
-  headerSub: { fontSize: 15, color: "#bbf7d0", marginTop: 4 },
+  /* Header - Enhanced */
+  header: { backgroundColor: "#15803d", paddingTop: 50, paddingBottom: 24, paddingHorizontal: 24, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, marginBottom: 20 },
+  headerTitle: { fontSize: 26, fontWeight: "bold", color: "#fff" },
+  headerSub: { fontSize: 14, color: "#bbf7d0", marginTop: 6 },
 
-  /* Warning Banner */
+  /* Warning Banner - Enhanced */
   warningBanner: {
     backgroundColor: "#fef3c7",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#fbbf24",
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 16,
+    padding: 16,
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 16,
+    marginBottom: 18,
   },
-  warningIcon: { fontSize: 18, marginRight: 10, marginTop: 2 },
-  warningText: { flex: 1, fontSize: 13, color: "#92400e", lineHeight: 20 },
+  warningText: { flex: 1, fontSize: 14, color: "#92400e", lineHeight: 22, marginLeft: 12 },
 
-  /* Alert Card */
+  /* Alert Card - Enhanced */
   alertCard: {
     backgroundColor: "#fef2f2",
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "#fecaca",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 18,
     alignItems: "center",
   },
-  alertIcon: { fontSize: 32, marginBottom: 8 },
-  alertTitle: { fontSize: 16, fontWeight: "700", color: "#dc2626", marginBottom: 6 },
-  alertText: { fontSize: 14, color: "#991b1b", textAlign: "center", lineHeight: 20 },
+  alertIcon: { fontSize: 40, marginBottom: 10 },
+  alertTitle: { fontSize: 18, fontWeight: "700", color: "#dc2626", marginBottom: 8 },
+  alertText: { fontSize: 15, color: "#991b1b", textAlign: "center", lineHeight: 24 },
 
-  /* Cards */
+  /* Cards - Enhanced */
   card: {
     backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 16,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 18,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
-  cardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
-  cardIcon: { fontSize: 22, marginRight: 10 },
-  cardTitle: { fontSize: 17, fontWeight: "700", color: "#1f2937" },
+  cardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 16, gap: 10 },
+  cardTitle: { fontSize: 18, fontWeight: "700", color: "#1e293b" },
 
-  /* Value Rows */
-  valueRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 12 },
-  valueRowBorder: { borderBottomWidth: 1, borderBottomColor: "#f3f4f6" },
-  valueRowAlert: { backgroundColor: "#fef2f2", marginHorizontal: -12, paddingHorizontal: 12, borderRadius: 8 },
+  /* Value Rows - Enhanced */
+  valueRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 14 },
+  valueRowBorder: { borderBottomWidth: 1, borderBottomColor: "#f1f5f9" },
+  valueRowAlert: { backgroundColor: "#fef2f2", marginHorizontal: -12, paddingHorizontal: 12, borderRadius: 12 },
   valueInfo: { flex: 1 },
-  valueName: { fontSize: 15, fontWeight: "600", color: "#1f2937" },
-  valueRange: { fontSize: 12, color: "#9ca3af", marginTop: 2 },
+  valueName: { fontSize: 16, fontWeight: "600", color: "#1e293b" },
+  valueRange: { fontSize: 13, color: "#94a3b8", marginTop: 4 },
   valueResult: { alignItems: "flex-end" },
-  valueNumber: { fontSize: 18, fontWeight: "700", color: "#1f2937" },
+  valueNumber: { fontSize: 20, fontWeight: "700", color: "#1e293b" },
   valueNumberAlert: { color: "#dc2626" },
-  valueUnit: { fontSize: 12, color: "#6b7280" },
+  valueUnit: { fontSize: 13, color: "#64748b" },
   outOfRangeBadge: {
     backgroundColor: "#fecaca",
     color: "#dc2626",
     fontSize: 11,
     fontWeight: "700",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginTop: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginTop: 6,
   },
 
-  /* Summary */
-  summaryText: { fontSize: 15, color: "#374151", lineHeight: 22 },
+  /* Summary - Enhanced */
+  summaryText: { fontSize: 15, color: "#475569", lineHeight: 26 },
 
-  /* Disclaimer Card */
+  /* Disclaimer Card - Enhanced */
   disclaimerCard: {
-    backgroundColor: "#f0fdf4",
-    borderWidth: 1,
-    borderColor: "#bbf7d0",
-    borderRadius: 12,
-    padding: 14,
+    backgroundColor: "#dcfce7",
+    borderWidth: 1.5,
+    borderColor: "#86efac",
+    borderRadius: 16,
+    padding: 18,
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 16,
+    marginBottom: 18,
   },
-  disclaimerIcon: { fontSize: 18, marginRight: 10, marginTop: 2 },
-  disclaimerText: { flex: 1, fontSize: 12, color: "#166534", lineHeight: 18 },
+  disclaimerText: { flex: 1, fontSize: 13, color: "#166534", lineHeight: 22, fontStyle: "italic", marginLeft: 12 },
 
-  /* New Exam Button */
+  /* New Exam Button - Enhanced */
   newExamButton: {
     backgroundColor: "#16a34a",
-    borderRadius: 14,
-    paddingVertical: 16,
+    borderRadius: 16,
+    paddingVertical: 18,
     alignItems: "center",
-    marginTop: 8,
+    marginTop: 10,
     shadowColor: "#16a34a",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  newExamButtonText: { color: "#fff", fontWeight: "bold", fontSize: 18 },
+  newExamButtonText: { color: "#fff", fontWeight: "bold", fontSize: 18, letterSpacing: 0.5 },
 });

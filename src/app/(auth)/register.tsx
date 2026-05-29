@@ -12,6 +12,7 @@ import {
   StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
 
 export default function RegisterScreen() {
@@ -101,12 +102,12 @@ export default function RegisterScreen() {
 
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         <View style={styles.formCard}>
-          {error ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorIcon}>⚠️</Text>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          ) : null}
+           {error ? (
+             <View style={styles.errorBox}>
+               <Ionicons name="alert-circle" size={20} color="#dc2626" />
+               <Text style={styles.errorText}>{error}</Text>
+             </View>
+           ) : null}
 
           <View style={styles.field}>
             <Text style={styles.label}>Nombre completo</Text>
@@ -188,8 +189,7 @@ const styles = StyleSheet.create({
   },
 
   errorBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#fef2f2", borderRadius: 12, padding: 14, marginBottom: 20 },
-  errorIcon: { fontSize: 18, marginRight: 10 },
-  errorText: { flex: 1, color: "#dc2626", fontSize: 14 },
+  errorText: { flex: 1, color: "#dc2626", fontSize: 14, marginLeft: 10 },
 
   field: { marginBottom: 18 },
   label: { fontSize: 14, fontWeight: "600", color: "#374151", marginBottom: 8 },

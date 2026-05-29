@@ -12,6 +12,7 @@ import {
   StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
 
 export default function LoginScreen() {
@@ -51,24 +52,24 @@ export default function LoginScreen() {
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.root}>
       <StatusBar barStyle="light-content" backgroundColor="#15803d" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerIcon}>🏥</Text>
-        <Text style={styles.headerTitle}>MedAssist</Text>
-        <Text style={styles.headerSub}>Tu asistente medico personal</Text>
-      </View>
+       {/* Header */}
+       <View style={styles.header}>
+         <Ionicons name="medkit" size={28} color="#fff" />
+         <Text style={styles.headerTitle}>MedAssist</Text>
+         <Text style={styles.headerSub}>Tu asistente medico personal</Text>
+       </View>
 
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         <View style={styles.formCard}>
           <Text style={styles.formTitle}>Inicio de Sesion</Text>
           <Text style={styles.formSub}>Ingresa tus credenciales para continuar</Text>
 
-          {error ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorIcon}>⚠️</Text>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          ) : null}
+           {error ? (
+             <View style={styles.errorBox}>
+               <Ionicons name="alert-circle" size={20} color="#dc2626" />
+               <Text style={styles.errorText}>{error}</Text>
+             </View>
+           ) : null}
 
           <View style={styles.field}>
             <Text style={styles.label}>Correo electronico</Text>
@@ -132,7 +133,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#f8fafc" },
   header: { backgroundColor: "#15803d", paddingTop: 60, paddingBottom: 32, alignItems: "center" },
-  headerIcon: { fontSize: 56, marginBottom: 12 },
   headerTitle: { fontSize: 32, fontWeight: "bold", color: "#fff" },
   headerSub: { fontSize: 16, color: "#bbf7d0", marginTop: 6 },
   body: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 24 },
@@ -153,8 +153,7 @@ const styles = StyleSheet.create({
 
   /* Error */
   errorBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#fef2f2", borderRadius: 12, padding: 14, marginBottom: 20 },
-  errorIcon: { fontSize: 18, marginRight: 10 },
-  errorText: { flex: 1, color: "#dc2626", fontSize: 14 },
+  errorText: { flex: 1, color: "#dc2626", fontSize: 14, marginLeft: 10 },
 
   /* Fields */
   field: { marginBottom: 18 },

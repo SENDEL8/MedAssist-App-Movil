@@ -12,6 +12,7 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import { labsApi, LabExamResponse } from "@/services/api";
@@ -118,7 +119,7 @@ export default function LabExamScreen() {
       {/* Instructions Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardIcon}>📋</Text>
+          <Ionicons name="document-text" size={24} color="#15803d" />
           <Text style={styles.cardTitle}>Examenes compatibles</Text>
         </View>
         <Text style={styles.instructionText}>
@@ -129,13 +130,13 @@ export default function LabExamScreen() {
         </Text>
       </View>
 
-      {/* Image Preview */}
-      {selectedImage && (
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardIcon}>📷</Text>
-            <Text style={styles.cardTitle}>Imagen seleccionada</Text>
-          </View>
+       {/* Image Preview */}
+       {selectedImage && (
+         <View style={styles.card}>
+           <View style={styles.cardHeader}>
+             <Ionicons name="camera" size={24} color="#15803d" />
+             <Text style={styles.cardTitle}>Imagen seleccionada</Text>
+           </View>
           <Image source={{ uri: selectedImage }} style={styles.previewImage} />
           <TouchableOpacity style={styles.retakeButton} onPress={() => setSelectedImage(null)}>
             <Text style={styles.retakeButtonText}>Quitar imagen</Text>
@@ -144,20 +145,20 @@ export default function LabExamScreen() {
       )}
 
       {/* Action Buttons */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardIcon}>📸</Text>
-          <Text style={styles.cardTitle}>Seleccionar imagen</Text>
-        </View>
-        <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.actionButton} onPress={pickImageFromCamera}>
-            <Text style={styles.actionButtonIcon}>📷</Text>
-            <Text style={styles.actionButtonText}>Tomar Foto</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={pickImageFromGallery}>
-            <Text style={styles.actionButtonIcon}>🖼️</Text>
-            <Text style={styles.actionButtonText}>Galeria</Text>
-          </TouchableOpacity>
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Ionicons name="camera" size={24} color="#15803d" />
+            <Text style={styles.cardTitle}>Seleccionar imagen</Text>
+          </View>
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={styles.actionButton} onPress={pickImageFromCamera}>
+              <Ionicons name="camera" size={36} color="#15803d" />
+              <Text style={styles.actionButtonText}>Tomar Foto</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={pickImageFromGallery}>
+              <Ionicons name="images" size={36} color="#15803d" />
+              <Text style={styles.actionButtonText}>Galeria</Text>
+            </TouchableOpacity>
         </View>
       </View>
 
@@ -185,67 +186,67 @@ export default function LabExamScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#f8fafc" },
-  scrollContent: { paddingHorizontal: 18, paddingTop: 20, paddingBottom: 32 },
+  root: { flex: 1, backgroundColor: "#f1f5f9" },
+  scrollContent: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 32 },
 
-  /* Header */
-  header: { backgroundColor: "#15803d", paddingTop: 50, paddingBottom: 24, paddingHorizontal: 24, borderRadius: 16, marginBottom: 16 },
-  headerTitle: { fontSize: 24, fontWeight: "bold", color: "#fff" },
-  headerSub: { fontSize: 15, color: "#bbf7d0", marginTop: 4 },
+  /* Header - Enhanced */
+  header: { backgroundColor: "#15803d", paddingTop: 50, paddingBottom: 24, paddingHorizontal: 24, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, marginBottom: 20 },
+  headerTitle: { fontSize: 26, fontWeight: "bold", color: "#fff" },
+  headerSub: { fontSize: 14, color: "#bbf7d0", marginTop: 6 },
 
-  /* Cards */
+  /* Cards - Enhanced */
   card: {
     backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 18,
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
-  cardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
-  cardIcon: { fontSize: 22, marginRight: 10 },
-  cardTitle: { fontSize: 17, fontWeight: "700", color: "#1f2937" },
-  instructionText: { fontSize: 14, color: "#4b5563", lineHeight: 22 },
+  cardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 16, gap: 10 },
+  cardTitle: { fontSize: 18, fontWeight: "700", color: "#1e293b" },
+  instructionText: { fontSize: 14, color: "#64748b", lineHeight: 24 },
 
-  /* Preview */
-  previewImage: { width: "100%", height: 200, borderRadius: 12, marginBottom: 12 },
-  retakeButton: { alignSelf: "center", paddingVertical: 8, paddingHorizontal: 16 },
+  /* Preview - Enhanced */
+  previewImage: { width: "100%", height: 220, borderRadius: 16, marginBottom: 14 },
+  retakeButton: { alignSelf: "center", paddingVertical: 10, paddingHorizontal: 18 },
   retakeButtonText: { color: "#ef4444", fontSize: 14, fontWeight: "600" },
 
-  /* Action Buttons */
-  buttonRow: { flexDirection: "row", gap: 12 },
+  /* Action Buttons - Enhanced */
+  buttonRow: { flexDirection: "row", gap: 14 },
   actionButton: {
     flex: 1,
-    backgroundColor: "#f0fdf4",
-    borderWidth: 1,
-    borderColor: "#bbf7d0",
-    borderRadius: 14,
-    paddingVertical: 20,
+    backgroundColor: "#dcfce7",
+    borderWidth: 1.5,
+    borderColor: "#86efac",
+    borderRadius: 16,
+    paddingVertical: 24,
     alignItems: "center",
   },
-  actionButtonIcon: { fontSize: 32, marginBottom: 8 },
   actionButtonText: { fontSize: 15, fontWeight: "600", color: "#15803d" },
 
   /* Error */
-  errorText: { color: "#ef4444", fontSize: 14, textAlign: "center", marginBottom: 12 },
+  errorText: { color: "#ef4444", fontSize: 14, textAlign: "center", marginBottom: 14, fontWeight: "500" },
 
-  /* Submit */
+  /* Submit - Enhanced */
   submitButton: {
     backgroundColor: "#16a34a",
-    borderRadius: 14,
-    paddingVertical: 16,
+    borderRadius: 16,
+    paddingVertical: 18,
     alignItems: "center",
-    marginTop: 8,
+    marginTop: 12,
     shadowColor: "#16a34a",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  submitButtonDisabled: { opacity: 0.6 },
-  submitButtonText: { color: "#fff", fontWeight: "bold", fontSize: 18 },
+  submitButtonDisabled: { opacity: 0.5 },
+  submitButtonText: { color: "#fff", fontWeight: "bold", fontSize: 18, letterSpacing: 0.5 },
   loadingRow: { flexDirection: "row", alignItems: "center" },
 });

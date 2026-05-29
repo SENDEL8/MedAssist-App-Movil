@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Tabs, useRouter, useSegments } from "expo-router";
 import { Text } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
 
 export default function TabsLayout() {
@@ -21,9 +22,9 @@ export default function TabsLayout() {
         options={{
           title: "Inicio",
           tabBarStyle: { display: "none" },
-          tabBarIcon: ({ focused }) => (
-            <Text style={{ fontSize: 22 }}>{focused ? "🏠" : "🏥"}</Text>
-          ),
+           tabBarIcon: ({ focused }) => (
+             <Ionicons name={focused ? "home" : "medkit"} size={22} color={focused ? "#16a34a" : "#6b7280"} />
+           ),
           tabBarLabel: ({ focused }) => (
             <Text style={{ color: focused ? "#16a34a" : "#6b7280", fontSize: 11 }}>Inicio</Text>
           ),
@@ -45,9 +46,9 @@ export default function TabsLayout() {
         name="history"
         options={{
           title: "Historial",
-          tabBarIcon: ({ focused }) => (
-            <Text style={{ fontSize: 22 }}>📋</Text>
-          ),
+           tabBarIcon: ({ focused }) => (
+             <Ionicons name="document-text" size={22} color={focused ? "#16a34a" : "#6b7280"} />
+           ),
           tabBarLabel: ({ focused }) => (
             <Text style={{ color: focused ? "#16a34a" : "#6b7280", fontSize: 11 }}>Historial</Text>
           ),
