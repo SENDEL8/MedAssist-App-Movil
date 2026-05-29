@@ -31,7 +31,7 @@ describe("AuthStore", () => {
 
   describe("login", () => {
     it("should login successfully with valid credentials", async () => {
-      const mockUser = { id: 1, email: "test@med.com", full_name: "Test User", created_at: "2024-01-01" };
+      const mockUser = { id: 1, email: "test@med.com", full_name: "Test User", birth_date: null, gender: null, age: null, created_at: "2024-01-01" };
       const mockToken = "mock.access.token";
       const mockRefreshToken = "mock.refresh.token";
 
@@ -74,7 +74,7 @@ describe("AuthStore", () => {
         access_token: "token",
         refresh_token: "refresh",
         token_type: "bearer",
-        user: { id: 1, email: "test@med.com", full_name: "Test", created_at: "2024-01-01" },
+        user: { id: 1, email: "test@med.com", full_name: "Test", birth_date: null, gender: null, age: null, created_at: "2024-01-01" },
       });
 
       await useAuthStore.getState().login("test@med.com", "Password1!");

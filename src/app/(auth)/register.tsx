@@ -21,10 +21,13 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [gender, setGender] = useState("");
   const [fullNameError, setFullNameError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [birthDateError, setBirthDateError] = useState("");
 
   const validateFullName = (value: string) => {
     if (!value.trim()) { setFullNameError("El nombre es requerido"); return false; }
@@ -59,11 +62,26 @@ export default function RegisterScreen() {
     return true;
   };
 
+  const validateBirthDate = (value: string): boolean => {
+    if (!value.trim()) { setBirthDateError(""); return true; }
+    const match = value.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!match) { setBirthDateError("Formato invalido. Use DD/MM/AAAA"); return false; }
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const year = parseInt(match[3], 10);
+    const d = new Date(year, month - 1, day);
+    if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) { setBirthDateError("Fecha invalida"); return false; }
+    if (d > new Date()) { setBirthDateError("La fecha no puede ser futura"); return false; }
+    setBirthDateError("");
+    return true;
+  };
+
   const handleRegister = async () => {
     clearError();
-    if (!validateFullName(fullName) || !validateEmail(email) || !validatePassword(password) || !validateConfirmPassword(confirmPassword)) return;
+    if (!validateFullName(fullName) || !validateEmail(email) || !validatePassword(password) || !validateConfirmPassword(confirmPassword) || !validateBirthDate(birthDate)) return;
     try {
-      await register(email.trim().toLowerCase(), password, fullName.trim());
+      const birthDateIso = birthDate ? birthDate.split("/").reverse().join("-") : undefined;
+      await register(email.trim().toLowerCase(), password, fullName.trim(), birthDateIso, gender || undefined);
       router.replace({ pathname: "/(auth)/verify-email", params: { email: email.trim().toLowerCase() } });
     } catch (err: any) {
       Alert.alert("Error", err.message);
@@ -112,6 +130,27 @@ export default function RegisterScreen() {
             <Text style={styles.label}>Confirmar contrasena</Text>
             <TextInput style={[styles.input, confirmPasswordError && styles.inputError]} placeholder="Repite tu contrasena" placeholderTextColor="#9ca3af" secureTextEntry autoCapitalize="none" autoCorrect={false} returnKeyType="done" onSubmitEditing={handleRegister} value={confirmPassword} onChangeText={(t) => { setConfirmPassword(t); if (confirmPasswordError) validateConfirmPassword(t); }} />
             {confirmPasswordError ? <Text style={styles.fieldError}>{confirmPasswordError}</Text> : null}
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.label}>Fecha de nacimiento (opcional)</Text>
+            <TextInput style={[styles.input, birthDateError && styles.inputError]} placeholder="DD/MM/AAAA — Ej. 15/03/1990" placeholderTextColor="#9ca3af" value={birthDate} onChangeText={(t) => { setBirthDate(t); if (birthDateError) setBirthDateError(""); }} keyboardType="number-pad" />
+            {birthDateError ? <Text style={styles.fieldError}>{birthDateError}</Text> : null}
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.label}>Genero (opcional)</Text>
+            <View style={styles.genderRow}>
+              {["Masculino", "Femenino"].map((g) => (
+                <TouchableOpacity
+                  key={g}
+                  style={[styles.genderBtn, gender === g && styles.genderBtnActive]}
+                  onPress={() => setGender(gender === g ? "" : g)}
+                >
+                  <Text style={[styles.genderText, gender === g && styles.genderTextActive]}>{g}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
 
           <TouchableOpacity style={[styles.button, isLoading && styles.buttonDisabled]} onPress={handleRegister} disabled={isLoading} activeOpacity={0.85}>
@@ -166,6 +205,20 @@ const styles = StyleSheet.create({
   },
   inputError: { borderColor: "#ef4444", backgroundColor: "#fef2f2" },
   fieldError: { color: "#ef4444", fontSize: 12, marginTop: 6 },
+
+  genderRow: { flexDirection: "row", gap: 10 },
+  genderBtn: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    backgroundColor: "#f9fafb",
+  },
+  genderBtnActive: { borderColor: "#16a34a", backgroundColor: "#dcfce7" },
+  genderText: { fontSize: 14, color: "#374151" },
+  genderTextActive: { color: "#15803d", fontWeight: "600" },
 
   button: { backgroundColor: "#16a34a", borderRadius: 14, paddingVertical: 16, alignItems: "center", marginTop: 8, shadowColor: "#16a34a", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 6, elevation: 3 },
   buttonDisabled: { opacity: 0.6 },

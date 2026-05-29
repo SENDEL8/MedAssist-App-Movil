@@ -7,10 +7,20 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user, token, logout, isRestored } = useAuthStore();
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [cpError, setCpError] = useState("");
+  const [editBirthDate, setEditBirthDate] = useState("");
+  const [editGender, setEditGender] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  const formatDate = (iso: string | null): string => {
+    if (!iso) return "";
+    const [y, m, d] = iso.split("-");
+    return `${d}/${m}/${y}`;
+  };
 
   useEffect(() => {
     if (isRestored && !token) {
@@ -22,6 +32,50 @@ export default function HomeScreen() {
     setShowProfileModal(false);
     router.replace("/(auth)/login");
     try { await logout(); } catch {}
+  };
+
+  const openProfileModal = () => {
+    setShowProfileEdit(false);
+    setShowProfileModal(true);
+  };
+
+  const openProfileEdit = () => {
+    if (!user) return;
+    setEditBirthDate(formatDate(user.birth_date));
+    setEditGender(user.gender || "");
+    setShowProfileEdit(true);
+  };
+
+  const cancelProfileEdit = () => {
+    setShowProfileEdit(false);
+  };
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      const body: { birth_date?: string; gender?: string } = {};
+      const trimmedDate = editBirthDate.trim();
+      if (trimmedDate) body.birth_date = trimmedDate;
+      const trimmedGender = editGender.trim();
+      if (trimmedGender) body.gender = trimmedGender;
+
+      if (!body.birth_date && !body.gender) {
+        Alert.alert("Sin cambios", "No hay datos para actualizar.");
+        setSavingProfile(false);
+        return;
+      }
+
+      const { updateProfile } = useAuthStore.getState();
+      await updateProfile(body);
+      setShowProfileEdit(false);
+      Alert.alert("Perfil actualizado", "Tus datos se guardaron correctamente.");
+    } catch (err: any) {
+      const detail = err.response?.data?.detail;
+      const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d).join(" | ") : detail || err.message || "Error al guardar";
+      Alert.alert("Error", msg);
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   const handleChangePassword = async () => {
@@ -76,7 +130,7 @@ export default function HomeScreen() {
 
           <TouchableOpacity
             style={styles.avatarBtn}
-            onPress={() => setShowProfileModal(true)}
+            onPress={openProfileModal}
             activeOpacity={0.7}
           >
             <View style={styles.avatar}>
@@ -172,43 +226,89 @@ export default function HomeScreen() {
         visible={showProfileModal}
         animationType="fade"
         transparent
-        onRequestClose={() => setShowProfileModal(false)}
+        onRequestClose={() => { setShowProfileModal(false); setShowProfileEdit(false); }}
       >
-        <TouchableOpacity
+        <Pressable
           style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowProfileModal(false)}
+          onPress={() => { setShowProfileModal(false); setShowProfileEdit(false); }}
         >
-          <View style={styles.profileCard}>
-            <View style={styles.profileAvatar}>
-              <Text style={styles.profileAvatarText}>
-                {user.full_name.charAt(0).toUpperCase()}
-              </Text>
-            </View>
-            <Text style={styles.profileName}>{user.full_name}</Text>
-            <Text style={styles.profileEmail}>{user.email}</Text>
+          <ScrollView
+            style={styles.modalScroll}
+            contentContainerStyle={styles.modalScrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <Pressable onPress={() => {}} style={styles.modalInner}>
+              <View style={styles.profileCard}>
+                <View style={styles.profileAvatar}>
+                  <Text style={styles.profileAvatarText}>
+                    {user.full_name.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+                <Text style={styles.profileName}>{user.full_name}</Text>
+                <Text style={styles.profileEmail}>{user.email}</Text>
 
-            <View style={styles.profileDivider} />
+                {showProfileEdit ? (
+                  <View style={styles.profileEditSection}>
+                    <Text style={styles.profileEditLabel}>Fecha de nacimiento</Text>
+                    <TextInput
+                      style={styles.profileEditInput}
+                      placeholder="DD/MM/AAAA — Ej. 15/03/1990"
+                      placeholderTextColor="#9ca3af"
+                      value={editBirthDate}
+                      onChangeText={setEditBirthDate}
+                      keyboardType="number-pad"
+                    />
+                    <Text style={styles.profileEditLabel}>Genero</Text>
+                    <View style={styles.genderRow}>
+                      {["Masculino", "Femenino"].map((g) => (
+                        <TouchableOpacity
+                          key={g}
+                          style={[styles.genderBtn, editGender === g && styles.genderBtnActive]}
+                          onPress={() => setEditGender(editGender === g ? "" : g)}
+                        >
+                          <Text style={[styles.genderText, editGender === g && styles.genderTextActive]}>{g}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    <TouchableOpacity style={styles.profileSaveBtn} onPress={handleSaveProfile} activeOpacity={0.85} disabled={savingProfile}>
+                      <Text style={styles.profileSaveBtnText}>{savingProfile ? "Guardando..." : "Guardar"}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.profileCancelBtn} onPress={cancelProfileEdit} activeOpacity={0.7}>
+                      <Text style={styles.profileCancelBtnText}>Cancelar</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={styles.profileInfoSection}>
+                    <View style={styles.profileInfoRow}>
+                      <Text style={styles.profileInfoLabel}>Fecha de nacimiento</Text>
+                      <Text style={styles.profileInfoValue}>{formatDate(user.birth_date) || "No especificada"}</Text>
+                    </View>
+                    <View style={styles.profileInfoRow}>
+                      <Text style={styles.profileInfoLabel}>Genero</Text>
+                      <Text style={styles.profileInfoValue}>{user.gender || "No especificado"}</Text>
+                    </View>
+                    <TouchableOpacity style={styles.profileEditBtn} onPress={openProfileEdit} activeOpacity={0.85}>
+                      <Text style={styles.profileEditBtnText}>Editar informacion</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
 
-            <TouchableOpacity
-              style={styles.changePwOption}
-              onPress={() => { setShowProfileModal(false); setShowChangePassword(true); }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.changePwIcon}>🔑</Text>
-              <Text style={styles.changePwLabel}>Cambiar contraseña</Text>
-            </TouchableOpacity>
+                <View style={styles.profileDivider} />
 
-            <TouchableOpacity
-              style={styles.logoutOption}
-              onPress={handleLogout}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.logoutIcon}>🚪</Text>
-              <Text style={styles.logoutLabel}>Cerrar sesion</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
+                <TouchableOpacity style={styles.changePwOption} onPress={() => { setShowProfileModal(false); setShowChangePassword(true); }} activeOpacity={0.7}>
+                  <Text style={styles.changePwIcon}>🔑</Text>
+                  <Text style={styles.changePwLabel}>Cambiar contraseña</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.logoutOption} onPress={handleLogout} activeOpacity={0.7}>
+                  <Text style={styles.logoutIcon}>🚪</Text>
+                  <Text style={styles.logoutLabel}>Cerrar sesion</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </ScrollView>
+        </Pressable>
       </Modal>
 
       {/* Change Password Modal */}
@@ -219,7 +319,7 @@ export default function HomeScreen() {
         onRequestClose={() => setShowChangePassword(false)}
       >
         <Pressable style={styles.modalOverlay} onPress={() => setShowChangePassword(false)}>
-          <Pressable onPress={() => {}}>
+          <Pressable onPress={() => {}} style={styles.modalInner}>
             <View style={styles.changePwCard}>
               <Text style={styles.changePwTitle}>Cambiar contraseña</Text>
 
@@ -230,37 +330,16 @@ export default function HomeScreen() {
               ) : null}
 
               <Text style={styles.fieldLabel}>Contraseña actual</Text>
-              <TextInput
-                style={styles.fieldInput}
-                placeholder="Ingresa tu contraseña actual"
-                placeholderTextColor="#9ca3af"
-                secureTextEntry
-                value={currentPassword}
-                onChangeText={setCurrentPassword}
-              />
+              <TextInput style={styles.fieldInput} placeholder="Ingresa tu contraseña actual" placeholderTextColor="#9ca3af" secureTextEntry value={currentPassword} onChangeText={setCurrentPassword} />
 
               <Text style={styles.fieldLabel}>Nueva contraseña</Text>
-              <TextInput
-                style={styles.fieldInput}
-                placeholder="Ingresa la nueva contraseña"
-                placeholderTextColor="#9ca3af"
-                secureTextEntry
-                value={newPassword}
-                onChangeText={setNewPassword}
-              />
+              <TextInput style={styles.fieldInput} placeholder="Ingresa la nueva contraseña" placeholderTextColor="#9ca3af" secureTextEntry value={newPassword} onChangeText={setNewPassword} />
 
-              <TouchableOpacity
-                style={styles.changePwButton}
-                onPress={handleChangePassword}
-                activeOpacity={0.85}
-              >
+              <TouchableOpacity style={styles.changePwButton} onPress={handleChangePassword} activeOpacity={0.85}>
                 <Text style={styles.changePwButtonText}>Actualizar contraseña</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.changePwCancel}
-                onPress={() => { setShowChangePassword(false); setCpError(""); setCurrentPassword(""); setNewPassword(""); }}
-              >
+              <TouchableOpacity style={styles.changePwCancel} onPress={() => { setShowChangePassword(false); setCpError(""); setCurrentPassword(""); setNewPassword(""); }}>
                 <Text style={styles.changePwCancelText}>Cancelar</Text>
               </TouchableOpacity>
             </View>
@@ -363,13 +442,17 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
+    padding: 24,
   },
+  modalScroll: { flex: 1 },
+  modalScrollContent: { alignItems: "center", justifyContent: "center", flexGrow: 1, paddingVertical: 16 },
+  modalInner: { width: "100%", maxWidth: 480 },
   profileCard: {
     backgroundColor: "#fff",
     borderRadius: 24,
-    padding: 28,
-    width: "80%",
-    maxWidth: 300,
+    paddingHorizontal: 20,
+    paddingVertical: 28,
+    width: "100%",
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
@@ -390,6 +473,61 @@ const styles = StyleSheet.create({
   profileName: { fontSize: 20, fontWeight: "700", color: "#1f2937", marginBottom: 4 },
   profileEmail: { fontSize: 14, color: "#6b7280", marginBottom: 4 },
   profileDivider: { width: "100%", height: 1, backgroundColor: "#f3f4f6", marginVertical: 20 },
+
+  /* Profile info (view mode) */
+  profileInfoSection: { width: "100%" },
+  profileInfoRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#f3f4f6" },
+  profileInfoLabel: { fontSize: 15, color: "#6b7280" },
+  profileInfoValue: { fontSize: 16, fontWeight: "600", color: "#1f2937" },
+  profileEditBtn: {
+    backgroundColor: "#f0fdf4",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: "#bbf7d0",
+  },
+  profileEditBtnText: { color: "#15803d", fontWeight: "700", fontSize: 15 },
+
+  /* Profile edit (edit mode) */
+  profileEditSection: { width: "100%", marginTop: 12 },
+  profileEditLabel: { fontSize: 13, fontWeight: "600", color: "#6b7280", marginBottom: 4, marginTop: 8 },
+  profileEditInput: {
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: "#1f2937",
+    backgroundColor: "#f9fafb",
+  },
+  profileSaveBtn: {
+    backgroundColor: "#16a34a",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 14,
+  },
+  profileSaveBtnText: { color: "#fff", fontWeight: "bold", fontSize: 15 },
+  profileCancelBtn: { marginTop: 12, alignItems: "center" },
+  profileCancelBtnText: { color: "#6b7280", fontSize: 15 },
+
+  /* Gender chips */
+  genderRow: { flexDirection: "row", gap: 10 },
+  genderBtn: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    backgroundColor: "#f9fafb",
+  },
+  genderBtnActive: { borderColor: "#16a34a", backgroundColor: "#dcfce7" },
+  genderText: { fontSize: 14, color: "#374151" },
+  genderTextActive: { color: "#15803d", fontWeight: "600" },
 
   logoutOption: {
     flexDirection: "row",
@@ -420,8 +558,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 24,
     padding: 28,
-    width: "85%",
-    maxWidth: 340,
+    width: "100%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,

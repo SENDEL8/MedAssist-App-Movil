@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { medicalApi } from "@/services/api";
+import { authApi, medicalApi } from "@/services/api";
 
 const SYMPTOMS_LIST = [
   "Fiebre", "Tos", "Dolor de cabeza", "Fatiga", "Nauseas",
@@ -35,6 +35,18 @@ export default function ConsultationScreen() {
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const prefill = await authApi.getPrefill();
+        if (prefill.age) setAge(String(prefill.age));
+        if (prefill.gender) setGender(prefill.gender);
+      } catch {
+        // silencioso — si falla el prefill, el usuario completa manual
+      }
+    })();
+  }, []);
 
   const toggleSymptom = (symptom: string) => {
     setSelectedSymptoms((prev) =>

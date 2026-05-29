@@ -10,12 +10,13 @@ interface AuthState {
   isRestored: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, full_name: string) => Promise<void>;
+  register: (email: string, password: string, full_name: string, birth_date?: string, gender?: string) => Promise<void>;
   verifyEmail: (email: string, code: string) => Promise<void>;
   resendCode: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   restoreSession: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  updateProfile: (body: { full_name?: string; birth_date?: string; gender?: string }) => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
   clearError: () => void;
 }
@@ -62,10 +63,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  register: async (email: string, password: string, full_name: string) => {
+  register: async (email: string, password: string, full_name: string, birth_date?: string, gender?: string) => {
     set({ isLoading: true, error: null });
     try {
-      await authApi.register(email, password, full_name);
+      await authApi.register(email, password, full_name, birth_date, gender);
       set({ isLoading: false });
     } catch (err: any) {
       const message = err.response?.data?.detail || "Error al registrar";
@@ -115,6 +116,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const message = err.response?.data?.detail || "Error al cambiar la contrasena";
       set({ error: message, isLoading: false });
       throw new Error(message);
+    }
+  },
+
+  updateProfile: async (body) => {
+    set({ isLoading: true, error: null });
+    try {
+      const updated = await authApi.updateProfile(body);
+      await storage.setItem(USER_KEY, JSON.stringify(updated));
+      set({ user: updated, isLoading: false });
+    } catch (err: any) {
+      const message = err.response?.data?.detail || "Error al actualizar perfil";
+      set({ error: message, isLoading: false });
+      throw err;
     }
   },
 

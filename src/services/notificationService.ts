@@ -57,7 +57,7 @@ export async function ensureAndroidChannel(soundName: SoundOption = "default") {
     name: "Alertas de Medicamentos",
     importance: Notifications.AndroidImportance.HIGH,
     sound: soundFile || undefined,
-    vibrationPattern: true,
+    vibrationPattern: null,
     enableVibrate: true,
     showBadge: true,
   });

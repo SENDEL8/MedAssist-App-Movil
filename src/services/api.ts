@@ -57,6 +57,9 @@ export interface User {
   id: number;
   email: string;
   full_name: string;
+  birth_date: string | null;
+  gender: string | null;
+  age: number | null;
   created_at: string;
 }
 
@@ -77,13 +80,30 @@ interface RefreshResponse {
   refresh_token: string;
 }
 
+export interface PrefillResponse {
+  age: number | null;
+  gender: string | null;
+}
+
 export const authApi = {
-  async register(email: string, password: string, full_name: string): Promise<RegisterResponse> {
+  async register(email: string, password: string, full_name: string, birth_date?: string, gender?: string): Promise<RegisterResponse> {
     const { data } = await api.post<RegisterResponse>("/api/v1/auth/register", {
       email,
       password,
       full_name,
+      birth_date: birth_date || null,
+      gender: gender || null,
     });
+    return data;
+  },
+
+  async getPrefill(): Promise<PrefillResponse> {
+    const { data } = await api.get<PrefillResponse>("/api/v1/auth/me/prefill");
+    return data;
+  },
+
+  async updateProfile(body: { full_name?: string; birth_date?: string; gender?: string }): Promise<User> {
+    const { data } = await api.patch<User>("/api/v1/auth/me", body);
     return data;
   },
 
@@ -200,6 +220,14 @@ export interface LabExamHistoryItem {
   created_at: string;
 }
 
+export interface PageResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+  has_next: boolean;
+}
+
 export const medicalApi = {
   async createConsultation(data: ConsultationRequest): Promise<ConsultationResponse> {
     const { data: result } = await api.post<ConsultationResponse>(
@@ -209,8 +237,10 @@ export const medicalApi = {
     return result;
   },
 
-  async getConsultations(): Promise<ConsultationHistoryItem[]> {
-    const { data } = await api.get<ConsultationHistoryItem[]>("/api/v1/medical/consultations");
+  async getConsultations(page: number = 1, pageSize: number = 20): Promise<PageResponse<ConsultationHistoryItem>> {
+    const { data } = await api.get<PageResponse<ConsultationHistoryItem>>("/api/v1/medical/consultations", {
+      params: { page, page_size: pageSize },
+    });
     return data;
   },
 };
@@ -227,8 +257,10 @@ export const labsApi = {
     return data;
   },
 
-  async getLabExams(): Promise<LabExamHistoryItem[]> {
-    const { data } = await api.get<LabExamHistoryItem[]>("/api/v1/labs/history");
+  async getLabExams(page: number = 1, pageSize: number = 20): Promise<PageResponse<LabExamHistoryItem>> {
+    const { data } = await api.get<PageResponse<LabExamHistoryItem>>("/api/v1/labs/history", {
+      params: { page, page_size: pageSize },
+    });
     return data;
   },
 };
